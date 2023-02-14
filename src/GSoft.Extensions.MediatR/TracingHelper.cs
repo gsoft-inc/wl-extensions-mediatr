@@ -8,15 +8,15 @@ namespace GSoft.Extensions.MediatR;
 internal static class TracingHelper
 {
     // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.18.0/specification/common/mapping-to-non-otlp.md#span-status
-    private const string StatusCodeTag = "otel.status_code";
-    private const string StatusDescriptionTag = "otel.status_description";
+    internal const string StatusCodeTag = "otel.status_code";
+    internal const string StatusDescriptionTag = "otel.status_description";
 
     // https://github.com/open-telemetry/opentelemetry-specification/blob/v1.18.0/specification/logs/semantic_conventions/exceptions.md
-    private const string ExceptionTypeTag = "exception.type";
-    private const string ExceptionMessageTag = "exception.message";
-    private const string ExceptionStackTraceTag = "exception.stacktrace";
+    internal const string ExceptionTypeTag = "exception.type";
+    internal const string ExceptionMessageTag = "exception.message";
+    internal const string ExceptionStackTraceTag = "exception.stacktrace";
 
-    private const string ActivityName = "MediatR.Request";
+    private const string ActivityName = "Mediator";
 
     private static readonly Assembly Assembly = typeof(TracingHelper).Assembly;
     private static readonly AssemblyName AssemblyName = Assembly.GetName();

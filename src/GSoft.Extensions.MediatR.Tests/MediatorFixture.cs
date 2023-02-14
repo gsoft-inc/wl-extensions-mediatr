@@ -10,9 +10,26 @@ public sealed class MediatorFixture : BaseUnitFixture
     {
         base.ConfigureServices(services);
 
+        services.AddSingleton<InMemoryActivityTracker>();
+
+        services.AddSingleton<InMemoryLoggerTracker>();
+        services.AddSingleton<ILoggerProvider>(x => x.GetRequiredService<InMemoryLoggerTracker>());
         services.AddLogging(x => x.AddFilter(typeof(MediatorBuilder).Assembly.GetName().Name!, LogLevel.Trace));
-        services.AddMediator(typeof(MediatorFixture).Assembly).AddApplicationInsights();
+
+        // Add ApplicationInsights twice to verify we do not register duplicate behaviors
+        services.AddMediator(typeof(MediatorFixture).Assembly)
+            .AddApplicationInsights()
+            .AddApplicationInsights();
 
         return services;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+        }
+
+        base.Dispose(disposing);
     }
 }

@@ -21,7 +21,7 @@ public static class MediatorBuilderExtensions
 
             if (implementationType == typeof(RequestApplicationInsightsBehavior<,>))
             {
-                // Behavior already added
+                // ApplicationInsights behavior already added
                 return builder;
             }
         }

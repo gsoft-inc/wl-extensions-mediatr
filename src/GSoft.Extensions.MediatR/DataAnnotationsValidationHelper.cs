@@ -6,13 +6,8 @@ internal static class DataAnnotationsValidationHelper
 {
     // Inspired from .NET options validation
     // https://github.com/dotnet/runtime/blob/v6.0.0/src/libraries/Microsoft.Extensions.Options.DataAnnotations/src/DataAnnotationValidateOptions.cs
-    public static void Validate(object? request)
+    public static void Validate(object request)
     {
-        if (request is null)
-        {
-            return;
-        }
-
         var validationResults = new List<ValidationResult>();
         if (Validator.TryValidateObject(request, new ValidationContext(request), validationResults, validateAllProperties: true))
         {

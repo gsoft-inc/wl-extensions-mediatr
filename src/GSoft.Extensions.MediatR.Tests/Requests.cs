@@ -12,7 +12,7 @@ internal sealed class SampleRequestHandler : IRequestHandler<SampleRequest, stri
 {
     public Task<string> Handle(SampleRequest request, CancellationToken cancellationToken)
     {
-        return request.IsSuccessful ? Task.FromResult($"Hello {request.RequiredValue}!") : throw new InvalidOperationException();
+        return request.IsSuccessful ? Task.FromResult($"Hello {request.RequiredValue}!") : throw new InvalidOperationException("Something wrong happened");
     }
 }
 
@@ -26,7 +26,7 @@ internal sealed class SampleStreamQueryHandler : IStreamRequestHandler<SampleStr
 
         if (!request.IsSuccessful)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Something wrong happened");
         }
 
         yield return request.RequiredValue + "!";

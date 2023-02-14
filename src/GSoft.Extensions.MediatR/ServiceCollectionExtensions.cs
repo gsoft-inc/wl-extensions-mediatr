@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using GSoft.Extensions.MediatR;
 using MediatR;
@@ -5,6 +6,7 @@ using MediatR;
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection;
 
+[ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtensions
 {
     public static MediatorBuilder AddMediator(this IServiceCollection services, params Assembly[] assemblies)
