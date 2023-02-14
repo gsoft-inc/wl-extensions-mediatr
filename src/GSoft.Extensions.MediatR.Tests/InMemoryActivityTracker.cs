@@ -1,9 +1,8 @@
-using System.Collections;
 using System.Diagnostics;
 
 namespace GSoft.Extensions.MediatR.Tests;
 
-internal sealed class InMemoryActivityTracker : IReadOnlyList<Activity>, IDisposable
+internal sealed class InMemoryActivityTracker : IDisposable
 {
     private static readonly HashSet<InMemoryActivityTracker> ActiveTrackers = new HashSet<InMemoryActivityTracker>();
 
@@ -41,33 +40,46 @@ internal sealed class InMemoryActivityTracker : IReadOnlyList<Activity>, IDispos
         }
     }
 
-    public int Count
-    {
-        get
-        {
-            lock (this._activities)
-            {
-                return this._activities.Count;
-            }
-        }
-    }
-
-    public Activity this[int index]
-    {
-        get
-        {
-            lock (this._activities)
-            {
-                return this._activities[index];
-            }
-        }
-    }
-
     private void TrackActivity(Activity activity)
     {
         lock (this._activities)
         {
             this._activities.Add(activity);
+        }
+    }
+
+    public void AssertRequestSuccessful(string requestName)
+    {
+        lock (this._activities)
+        {
+            var activity = Assert.Single(this._activities);
+
+            Assert.Equal("Mediator", activity.OperationName);
+            Assert.Equal(requestName, activity.DisplayName);
+            Assert.Equal(ActivityKind.Internal, activity.Kind);
+            Assert.Equal(ActivityStatusCode.Ok, activity.Status);
+            Assert.Equal("OK", activity.GetTagItem(TracingHelper.StatusCodeTag));
+        }
+    }
+
+    public void AssertRequestFailed(string requestName, Exception exception)
+    {
+        lock (this._activities)
+        {
+            var activity = Assert.Single(this._activities);
+
+            Assert.Equal("Mediator", activity.OperationName);
+            Assert.Equal(requestName, activity.DisplayName);
+            Assert.Equal(ActivityKind.Internal, activity.Kind);
+            Assert.Equal(ActivityStatusCode.Error, activity.Status);
+
+            Assert.Equal("ERROR", activity.GetTagItem(TracingHelper.StatusCodeTag));
+            Assert.Equal(exception.Message, activity.GetTagItem(TracingHelper.StatusDescriptionTag));
+            Assert.Equal(exception.Message, activity.GetTagItem(TracingHelper.ExceptionMessageTag));
+            Assert.Equal(exception.GetType().FullName!, activity.GetTagItem(TracingHelper.ExceptionTypeTag));
+
+            var stacktrace = Assert.IsType<string>(activity.GetTagItem(TracingHelper.ExceptionStackTraceTag));
+            Assert.NotEmpty(stacktrace);
         }
     }
 
@@ -77,18 +89,5 @@ internal sealed class InMemoryActivityTracker : IReadOnlyList<Activity>, IDispos
         {
             ActiveTrackers.Remove(this);
         }
-    }
-
-    public IEnumerator<Activity> GetEnumerator()
-    {
-        lock (this._activities)
-        {
-            return this._activities.ToList().GetEnumerator();
-        }
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return this.GetEnumerator();
     }
 }

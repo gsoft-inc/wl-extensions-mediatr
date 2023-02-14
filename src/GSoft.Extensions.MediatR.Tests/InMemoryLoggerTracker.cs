@@ -1,50 +1,14 @@
-﻿using System.Collections;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace GSoft.Extensions.MediatR.Tests;
 
-internal sealed class InMemoryLoggerTracker : IReadOnlyList<string>, ILoggerProvider, ILogger
+internal sealed class InMemoryLoggerTracker : ILoggerProvider, ILogger
 {
     private readonly List<string> _logs;
 
     public InMemoryLoggerTracker()
     {
         this._logs = new List<string>();
-    }
-
-    public int Count
-    {
-        get
-        {
-            lock (this._logs)
-            {
-                return this._logs.Count;
-            }
-        }
-    }
-
-    public string this[int index]
-    {
-        get
-        {
-            lock (this._logs)
-            {
-                return this._logs[index];
-            }
-        }
-    }
-
-    public IEnumerator<string> GetEnumerator()
-    {
-        lock (this._logs)
-        {
-            return this._logs.ToList().GetEnumerator();
-        }
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return this.GetEnumerator();
     }
 
     public ILogger CreateLogger(string categoryName)
@@ -72,6 +36,26 @@ internal sealed class InMemoryLoggerTracker : IReadOnlyList<string>, ILoggerProv
 
     public void Dispose()
     {
+    }
+
+    public void AssertRequestSuccessful(string startsWith)
+    {
+        lock (this._logs)
+        {
+            Assert.Equal(2, this._logs.Count);
+            Assert.Single(this._logs, x => x.StartsWith(startsWith + " started"));
+            Assert.Single(this._logs, x => x.StartsWith(startsWith + " ended successfully"));
+        }
+    }
+
+    public void AssertRequestFailed(string startsWith)
+    {
+        lock (this._logs)
+        {
+            Assert.Equal(2, this._logs.Count);
+            Assert.Single(this._logs, x => x.StartsWith(startsWith + " started"));
+            Assert.Single(this._logs, x => x.StartsWith(startsWith + " failed after"));
+        }
     }
 
     private sealed class NoopDisposable : IDisposable

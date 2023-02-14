@@ -29,7 +29,19 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
             operation.Telemetry.Type = ApplicationInsightsConstants.TelemetryType;
 
             IAsyncEnumerator<TResponse> resultsEnumerator;
-            await using ((resultsEnumerator = next().GetAsyncEnumerator(cancellationToken)).ConfigureAwait(false))
+
+            try
+            {
+                resultsEnumerator = next().GetAsyncEnumerator(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                operation.Telemetry.Success = false;
+                this._telemetryClient?.TrackException(ex);
+                throw;
+            }
+
+            await using (resultsEnumerator.ConfigureAwait(false))
             {
                 var hasNext = true;
 

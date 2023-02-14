@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using GSoft.Extensions.Xunit;
 using MediatR;
@@ -12,6 +11,7 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
     private readonly IMediator _mediator;
     private readonly InMemoryLoggerTracker _logs;
     private readonly InMemoryActivityTracker _activities;
+    private readonly InMemoryTelemetryTracker _telemetry;
 
     public MediatorTests(MediatorFixture fixture, ITestOutputHelper testOutputHelper)
         : base(fixture, testOutputHelper)
@@ -19,32 +19,7 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
         this._mediator = this.Services.GetRequiredService<IMediator>();
         this._logs = this.Services.GetRequiredService<InMemoryLoggerTracker>();
         this._activities = this.Services.GetRequiredService<InMemoryActivityTracker>();
-    }
-
-    [Fact]
-    public void Behaviors_Are_Registered_In_The_Right_Order()
-    {
-        const int customRegisteredBehaviorCount = 4;
-
-        // Only take the behaviors we register, the first others are added by MediatR itself
-        // If we ever add more custom behaviors, increment that constant
-        var behaviors = this.Services.GetServices<IPipelineBehavior<SampleRequest, string>>().TakeLast(customRegisteredBehaviorCount).ToArray();
-        var streamBehaviors = this.Services.GetServices<IStreamPipelineBehavior<SampleStreamRequest, string>>().TakeLast(customRegisteredBehaviorCount).ToArray();
-
-        Assert.Equal(customRegisteredBehaviorCount, behaviors.Length);
-        Assert.Equal(customRegisteredBehaviorCount, streamBehaviors.Length);
-
-        // ApplicationInsights and OpenTelemetry tracing basically do the same job
-        // They must be registered before logging and validation behaviors in order to record logs and validation exceptions
-        Assert.IsType<RequestApplicationInsightsBehavior<SampleRequest, string>>(behaviors[0]);
-        Assert.IsType<RequestTracingBehavior<SampleRequest, string>>(behaviors[1]);
-        Assert.IsType<RequestLoggingBehavior<SampleRequest, string>>(behaviors[2]);
-        Assert.IsType<RequestValidationBehavior<SampleRequest, string>>(behaviors[3]);
-
-        Assert.IsType<StreamRequestApplicationInsightsBehavior<SampleStreamRequest, string>>(streamBehaviors[0]);
-        Assert.IsType<StreamRequestTracingBehavior<SampleStreamRequest, string>>(streamBehaviors[1]);
-        Assert.IsType<StreamRequestLoggingBehavior<SampleStreamRequest, string>>(streamBehaviors[2]);
-        Assert.IsType<StreamRequestValidationBehavior<SampleStreamRequest, string>>(streamBehaviors[3]);
+        this._telemetry = this.Services.GetRequiredService<InMemoryTelemetryTracker>();
     }
 
     [Fact]
@@ -53,18 +28,20 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
         var result = await this._mediator.Send(new SampleRequest("world", IsSuccessful: true));
         Assert.Equal("Hello world!", result);
 
-        this.AssertRequestSuccessfulLogs("Request SampleRequest");
-        this.AssertRequestSuccessfulActivity();
+        this._logs.AssertRequestSuccessful("Request SampleRequest");
+        this._activities.AssertRequestSuccessful("SampleRequest");
+        this._telemetry.AssertRequestSuccessful("SampleRequest");
     }
 
     [Fact]
     public async Task Send_Request_Throws_When_Handler_Fails()
     {
         var action = () => this._mediator.Send(new SampleRequest("world", IsSuccessful: false));
-        await Assert.ThrowsAsync<InvalidOperationException>(action);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(action);
 
-        this.AssertRequestHandlerFailedActivity();
-        this.AssertRequestFailedLogs("Request SampleRequest");
+        this._logs.AssertRequestFailed("Request SampleRequest");
+        this._activities.AssertRequestFailed("SampleRequest", exception);
+        this._telemetry.AssertRequestFailed("SampleRequest", exception);
     }
 
     [Fact]
@@ -77,8 +54,9 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
         Assert.Equal("SampleRequest", exception.RequestName);
         Assert.Contains("RequiredValue", exception.Message);
 
-        this.AssertRequestValidationFailedActivity();
-        this.AssertRequestFailedLogs("Request SampleRequest");
+        this._logs.AssertRequestFailed("Request SampleRequest");
+        this._activities.AssertRequestFailed("SampleRequest", exception);
+        this._telemetry.AssertRequestFailed("SampleRequest", exception);
     }
 
     [Fact]
@@ -90,18 +68,18 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
         Assert.Equal("Hello", items[0]);
         Assert.Equal("world!", items[1]);
 
-        this.AssertRequestSuccessfulLogs("Stream request SampleStreamRequest");
-        this.AssertRequestSuccessfulActivity();
+        this._logs.AssertRequestSuccessful("Stream request SampleStreamRequest");
+        this._activities.AssertRequestSuccessful("SampleStreamRequest");
     }
 
     [Fact]
     public async Task Send_StreamRequest_Throws_When_Handler_Fails()
     {
         var action = () => this._mediator.CreateStream(new SampleStreamRequest("world", IsSuccessful: false)).ToListAsync();
-        await Assert.ThrowsAsync<InvalidOperationException>(action);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(action);
 
-        this.AssertRequestHandlerFailedActivity();
-        this.AssertRequestFailedLogs("Stream request SampleStreamRequest");
+        this._logs.AssertRequestFailed("Stream request SampleStreamRequest");
+        this._activities.AssertRequestFailed("SampleStreamRequest", exception);
     }
 
     [Fact]
@@ -114,67 +92,55 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
         Assert.Equal("SampleStreamRequest", exception.RequestName);
         Assert.Contains("RequiredValue", exception.Message);
 
-        this.AssertRequestValidationFailedActivity();
-        this.AssertRequestFailedLogs("Stream request SampleStreamRequest");
+        this._logs.AssertRequestFailed("Stream request SampleStreamRequest");
+        this._activities.AssertRequestFailed("SampleStreamRequest", exception);
     }
 
-    private void AssertRequestSuccessfulLogs(string prefix)
+    [Fact]
+    public void Behaviors_Are_Registered_In_The_Right_Order()
     {
-        Assert.Equal(2, this._logs.Count);
-        Assert.Single(this._logs, x => x.StartsWith(prefix + " started"));
-        Assert.Single(this._logs, x => x.StartsWith(prefix + " ended successfully"));
-    }
+        // Only take the behaviors we register, the first others are added by MediatR itself
+        // If we ever add more custom behaviors, increment that constant
+        var reverseRequestBehaviors = this.Services.GetServices<IPipelineBehavior<SampleRequest, string>>().Reverse().ToArray();
+        var reverseStreamRequestBehaviors = this.Services.GetServices<IStreamPipelineBehavior<SampleStreamRequest, string>>().Reverse().ToArray();
 
-    private void AssertRequestFailedLogs(string prefix)
-    {
-        Assert.Equal(2, this._logs.Count);
-        Assert.Single(this._logs, x => x.StartsWith(prefix + " started"));
-        Assert.Single(this._logs, x => x.StartsWith(prefix + " failed after"));
-    }
+        var expectedRequestCustomBehaviorTypes = new HashSet<Type>
+        {
+            typeof(RequestTracingBehavior<SampleRequest, string>),
+            typeof(RequestApplicationInsightsBehavior<SampleRequest, string>),
+            typeof(RequestLoggingBehavior<SampleRequest, string>),
+            typeof(RequestValidationBehavior<SampleRequest, string>),
+        };
 
-    private void AssertRequestSuccessfulActivity()
-    {
-        var activity = Assert.Single(this._activities);
+        var expectedCustomStreamRequestBehaviorTypes = new HashSet<Type>
+        {
+            typeof(StreamRequestTracingBehavior<SampleStreamRequest, string>),
+            typeof(StreamRequestApplicationInsightsBehavior<SampleStreamRequest, string>),
+            typeof(StreamRequestLoggingBehavior<SampleStreamRequest, string>),
+            typeof(StreamRequestValidationBehavior<SampleStreamRequest, string>),
+        };
 
-        Assert.Equal(ActivityKind.Internal, activity.Kind);
-        Assert.Equal(ActivityStatusCode.Ok, activity.Status);
-        Assert.Equal("OK", activity.GetTagItem(TracingHelper.StatusCodeTag));
-    }
+        // OpenTelemetry and ApplicationInsights tracing basically do the same job
+        // They must be registered before logging and validation behaviors in order to record logs and validation exceptions
+        Assert.IsType<RequestValidationBehavior<SampleRequest, string>>(reverseRequestBehaviors[0]);
+        Assert.IsType<RequestLoggingBehavior<SampleRequest, string>>(reverseRequestBehaviors[1]);
+        Assert.IsType<RequestApplicationInsightsBehavior<SampleRequest, string>>(reverseRequestBehaviors[2]);
+        Assert.IsType<RequestTracingBehavior<SampleRequest, string>>(reverseRequestBehaviors[3]);
 
-    private void AssertRequestHandlerFailedActivity()
-    {
-        var activity = Assert.Single(this._activities);
+        for (var i = 4; i < reverseRequestBehaviors.Length; i++)
+        {
+            // Any other behavior is not from this library
+            Assert.DoesNotContain(reverseRequestBehaviors[i].GetType(), expectedRequestCustomBehaviorTypes);
+        }
 
-        Assert.Equal(ActivityKind.Internal, activity.Kind);
-        Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        Assert.IsType<StreamRequestValidationBehavior<SampleStreamRequest, string>>(reverseStreamRequestBehaviors[0]);
+        Assert.IsType<StreamRequestLoggingBehavior<SampleStreamRequest, string>>(reverseStreamRequestBehaviors[1]);
+        Assert.IsType<StreamRequestApplicationInsightsBehavior<SampleStreamRequest, string>>(reverseStreamRequestBehaviors[2]);
+        Assert.IsType<StreamRequestTracingBehavior<SampleStreamRequest, string>>(reverseStreamRequestBehaviors[3]);
 
-        Assert.Equal("ERROR", activity.GetTagItem(TracingHelper.StatusCodeTag));
-        Assert.Equal("Something wrong happened", activity.GetTagItem(TracingHelper.StatusDescriptionTag));
-        Assert.Equal("Something wrong happened", activity.GetTagItem(TracingHelper.ExceptionMessageTag));
-        Assert.Equal("System.InvalidOperationException", activity.GetTagItem(TracingHelper.ExceptionTypeTag));
-
-        var stacktrace = Assert.IsType<string>(activity.GetTagItem(TracingHelper.ExceptionStackTraceTag));
-        Assert.NotEmpty(stacktrace);
-    }
-
-    private void AssertRequestValidationFailedActivity()
-    {
-        var activity = Assert.Single(this._activities);
-
-        Assert.Equal(ActivityKind.Internal, activity.Kind);
-        Assert.Equal(ActivityStatusCode.Error, activity.Status);
-
-        Assert.Equal("ERROR", activity.GetTagItem(TracingHelper.StatusCodeTag));
-
-        var statusDescription = Assert.IsType<string>(activity.GetTagItem(TracingHelper.StatusDescriptionTag));
-        Assert.Contains("Validation failed for", statusDescription);
-
-        var exceptionMessage = Assert.IsType<string>(activity.GetTagItem(TracingHelper.ExceptionMessageTag));
-        Assert.Contains("Validation failed for", exceptionMessage);
-
-        Assert.Equal("GSoft.Extensions.MediatR.RequestValidationException", activity.GetTagItem(TracingHelper.ExceptionTypeTag));
-
-        var stacktrace = Assert.IsType<string>(activity.GetTagItem(TracingHelper.ExceptionStackTraceTag));
-        Assert.NotEmpty(stacktrace);
+        for (var i = 4; i < reverseStreamRequestBehaviors.Length; i++)
+        {
+            Assert.DoesNotContain(reverseStreamRequestBehaviors[i].GetType(), expectedCustomStreamRequestBehaviorTypes);
+        }
     }
 }
