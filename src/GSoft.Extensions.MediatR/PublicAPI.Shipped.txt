@@ -6,6 +6,11 @@ GSoft.Extensions.MediatR.RequestValidationException.Failures.get -> System.Colle
 GSoft.Extensions.MediatR.RequestValidationException.RequestName.get -> string!
 GSoft.Extensions.MediatR.RequestValidationException.RequestType.get -> System.Type!
 GSoft.Extensions.MediatR.RequestValidationException.RequestValidationException(string! requestName, System.Type! requestType, System.Collections.Generic.IEnumerable<string!>! failureMessages) -> void
-override GSoft.Extensions.MediatR.RequestValidationException.Message.get -> string!
 Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions
+override GSoft.Extensions.MediatR.RequestValidationException.Message.get -> string!
 static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, params System.Reflection.Assembly![]! assemblies) -> GSoft.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, params System.Type![]! handlerAssemblyMarkerTypes) -> GSoft.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<MediatR.MediatRServiceConfiguration!>? configure, params System.Reflection.Assembly![]! assemblies) -> GSoft.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<MediatR.MediatRServiceConfiguration!>? configure, params System.Type![]! handlerAssemblyMarkerTypes) -> GSoft.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Collections.Generic.IEnumerable<System.Reflection.Assembly!>! assemblies, System.Action<MediatR.MediatRServiceConfiguration!>? configure) -> GSoft.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Collections.Generic.IEnumerable<System.Type!>! handlerAssemblyMarkerTypes, System.Action<MediatR.MediatRServiceConfiguration!>? configure) -> GSoft.Extensions.MediatR.MediatorBuilder!

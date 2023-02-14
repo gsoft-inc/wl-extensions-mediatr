@@ -58,6 +58,26 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
     [Fact]
     public void Services_Are_Registered_In_The_Right_Order()
     {
-        // TODO resolve behaviors and validate their order
+        const int customRegisteredBehaviorCount = 4;
+
+        // Only take the behaviors we register, the first others are added by MediatR itself
+        // If we ever add more custom behaviors, increment that constant
+        var behaviors = this.Services.GetServices<IPipelineBehavior<SampleRequest, string>>().TakeLast(customRegisteredBehaviorCount).ToArray();
+        var streamBehaviors = this.Services.GetServices<IStreamPipelineBehavior<SampleStreamRequest, string>>().TakeLast(customRegisteredBehaviorCount).ToArray();
+
+        Assert.Equal(customRegisteredBehaviorCount, behaviors.Length);
+        Assert.Equal(customRegisteredBehaviorCount, streamBehaviors.Length);
+
+        // Application Insights and OpenTelemetry tracing basically do the same job
+        // They must be registered before logging and validation behaviors in order to record their logs and exceptions
+        Assert.IsType<RequestApplicationInsightsBehavior<SampleRequest, string>>(behaviors[0]);
+        Assert.IsType<RequestTracingBehavior<SampleRequest, string>>(behaviors[1]);
+        Assert.IsType<RequestLoggingBehavior<SampleRequest, string>>(behaviors[2]);
+        Assert.IsType<RequestValidationBehavior<SampleRequest, string>>(behaviors[3]);
+
+        Assert.IsType<StreamRequestApplicationInsightsBehavior<SampleStreamRequest, string>>(streamBehaviors[0]);
+        Assert.IsType<StreamRequestTracingBehavior<SampleStreamRequest, string>>(streamBehaviors[1]);
+        Assert.IsType<StreamRequestLoggingBehavior<SampleStreamRequest, string>>(streamBehaviors[2]);
+        Assert.IsType<StreamRequestValidationBehavior<SampleStreamRequest, string>>(streamBehaviors[3]);
     }
 }

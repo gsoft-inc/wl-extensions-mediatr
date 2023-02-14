@@ -1,5 +1,4 @@
-﻿using GSoft.Extensions.MediatR.ApplicationInsights;
-using GSoft.Extensions.Xunit;
+﻿using GSoft.Extensions.Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

@@ -7,10 +7,38 @@ namespace GSoft.Extensions.MediatR;
 
 public sealed class MediatorBuilder
 {
-    internal MediatorBuilder(IServiceCollection services, Assembly[] assemblies)
+    internal MediatorBuilder(IServiceCollection services, IEnumerable<Assembly> assemblies, Action<MediatRServiceConfiguration>? configure)
     {
-        services.AddMediatR(Configure, assemblies);
+        services.AddMediatR(assemblies, ConfigurationFactory(configure));
+        RegisterBehaviors(services);
+        this.Services = services;
+    }
 
+    internal MediatorBuilder(IServiceCollection services, IEnumerable<Type> handlerAssemblyMarkerTypes, Action<MediatRServiceConfiguration>? configure)
+    {
+        services.AddMediatR(handlerAssemblyMarkerTypes, ConfigurationFactory(configure));
+        RegisterBehaviors(services);
+        this.Services = services;
+    }
+
+    public IServiceCollection Services { get; }
+
+    private static Action<MediatRServiceConfiguration> ConfigurationFactory(Action<MediatRServiceConfiguration>? userDefinedConfigure)
+    {
+        void Configure(MediatRServiceConfiguration configuration)
+        {
+            userDefinedConfigure?.Invoke(configuration);
+
+            // Force IMediator to be registered as singleton, we don't want to create a new instance of Mediator every time
+            // Request handlers are still registered as transient though
+            configuration.AsSingleton();
+        }
+
+        return Configure;
+    }
+
+    private static void RegisterBehaviors(IServiceCollection services)
+    {
         // OpenTelemetry tracing first
         services.TryAddEnumerable(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(RequestTracingBehavior<,>), ServiceLifetime.Singleton));
         services.TryAddEnumerable(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestTracingBehavior<,>), ServiceLifetime.Singleton));
@@ -22,16 +50,5 @@ public sealed class MediatorBuilder
         // Then validation so errors can be recorded by tracing and logging
         services.TryAddEnumerable(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>), ServiceLifetime.Singleton));
         services.TryAddEnumerable(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestValidationBehavior<,>), ServiceLifetime.Singleton));
-        services.TryAddEnumerable(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestValidationBehavior<,>), ServiceLifetime.Singleton));
-
-        this.Services = services;
-    }
-
-    public IServiceCollection Services { get; }
-
-    private static void Configure(MediatRServiceConfiguration options)
-    {
-        // The mediator instance is registered as singleton but the handlers are still transient
-        options.AsSingleton();
     }
 }

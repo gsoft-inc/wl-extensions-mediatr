@@ -2,7 +2,7 @@
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 
-namespace GSoft.Extensions.MediatR.ApplicationInsights;
+namespace GSoft.Extensions.MediatR;
 
 internal sealed class RequestApplicationInsightsBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>

@@ -8,7 +8,7 @@ MediatR extensions, behaviors and default configuration.
 
 ## Getting started
 
-TODO
+TODO documentation
 
 
 ## Building, releasing and versioning

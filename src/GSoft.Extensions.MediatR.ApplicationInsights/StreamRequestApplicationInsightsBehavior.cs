@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 
-namespace GSoft.Extensions.MediatR.ApplicationInsights;
+namespace GSoft.Extensions.MediatR;
 
 internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TResponse> : IStreamPipelineBehavior<TRequest, TResponse>
     where TRequest : IStreamRequest<TResponse>

@@ -1,4 +1,4 @@
-namespace GSoft.Extensions.MediatR.ApplicationInsights;
+namespace GSoft.Extensions.MediatR;
 
 internal static class ApplicationInsightsConstants
 {
