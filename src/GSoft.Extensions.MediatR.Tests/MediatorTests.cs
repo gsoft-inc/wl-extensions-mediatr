@@ -99,8 +99,6 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
     [Fact]
     public void Behaviors_Are_Registered_In_The_Right_Order()
     {
-        // Only take the behaviors we register, the first others are added by MediatR itself
-        // If we ever add more custom behaviors, increment that constant
         var reverseRequestBehaviors = this.Services.GetServices<IPipelineBehavior<SampleRequest, string>>().Reverse().ToArray();
         var reverseStreamRequestBehaviors = this.Services.GetServices<IStreamPipelineBehavior<SampleStreamRequest, string>>().Reverse().ToArray();
 
