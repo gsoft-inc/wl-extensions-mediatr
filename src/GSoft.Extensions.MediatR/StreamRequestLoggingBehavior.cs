@@ -19,7 +19,7 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
 
     public async IAsyncEnumerable<TResponse> Handle(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var originalActivity = Activity.Current;
+        var originatingActivity = Activity.Current;
         var requestName = request.GetType().Name;
 
         this._logger.StreamRequestStarted(requestName);
@@ -35,14 +35,14 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
         {
             watch.Stop();
 
-            if (originalActivity == null)
+            if (originatingActivity == null)
             {
                 this._logger.StreamRequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
             }
             else
             {
                 // Make sure the logs being sent are attached to the originating activity
-                originalActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
+                originatingActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
                 {
                     x.Logger.StreamRequestFailed(x.Exception, x.RequestName, x.Elapsed);
                 });
@@ -65,14 +65,14 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
                 {
                     watch.Stop();
 
-                    if (originalActivity == null)
+                    if (originatingActivity == null)
                     {
                         this._logger.StreamRequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
                     }
                     else
                     {
                         // Make sure the logs being sent are attached to the originating activity
-                        originalActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
+                        originatingActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
                         {
                             x.Logger.StreamRequestFailed(x.Exception, x.RequestName, x.Elapsed);
                         });
@@ -90,14 +90,14 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
 
         watch.Stop();
 
-        if (originalActivity == null)
+        if (originatingActivity == null)
         {
             this._logger.StreamRequestSucceeded(requestName, watch.Elapsed.TotalSeconds);
         }
         else
         {
             // Make sure the logs being sent are attached to the originating activity
-            originalActivity.ExecuteAsCurrentActivity(new SuccessfulLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds), static x =>
+            originatingActivity.ExecuteAsCurrentActivity(new SuccessfulLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds), static x =>
             {
                 x.Logger.StreamRequestSucceeded(x.RequestName, x.Elapsed);
             });
