@@ -3,12 +3,48 @@
 [![nuget](https://img.shields.io/nuget/v/GSoft.Extensions.MediatR.svg?logo=nuget)](https://www.nuget.org/packages/GSoft.Extensions.MediatR/)
 [![build](https://img.shields.io/github/actions/workflow/status/gsoft-inc/gsoft-extensions-mediatr/publish.yml?logo=github&branch=main)](https://github.com/gsoft-inc/gsoft-extensions-mediatr/actions/workflows/publish.yml)
 
-MediatR extensions, behaviors and default configuration.
+This library ensures that [MediatR](https://github.com/jbogard/MediatR) is registered in the dependency injection container **as a singleton** and also adds several behaviors:
+
+* [Activity-based OpenTelemetry](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs) instrumentation
+* [High-performance logging](https://learn.microsoft.com/en-us/dotnet/core/extensions/logger-message-generator) with `Debug` log level
+* Data annotations support for request validation, similar to [ASP.NET Core model validation](https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation)
+* [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) instrumentation (in a [separate NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/))
 
 
 ## Getting started
 
-TODO documentation
+Use the `AddMediator(params Assembly[] assemblies)` extension method on your dependency injection services (`IServiceCollection`) to automatically register all the MediatR request handlers from a given assembly.
+
+```csharp
+builder.Services.AddMediator(typeof(Program).Assembly);
+```
+
+If you use [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) and want to instrument your handlers, you can install the dedicated [NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/):
+
+```csharp
+builder.Services.AddMediator(typeof(Program).Assembly).AddApplicationInsights();
+```
+
+**Example**
+
+```csharp
+public sealed record SayHelloRequest([property: Required] string To) : IRequest<string>;
+
+public sealed class SayHelloRequestHandler : IRequestHandler<SayHelloRequest, string>
+{
+    public Task<string> Handle(SayHelloRequest request, CancellationToken cancellationToken)
+    {
+        return Task.FromResult($"Hello {request.To}!");
+    }
+}
+
+// [...]
+var mediator = serviceProvider.GetRequiredService<IMediator>();
+var result = await mediator.Send(new SayHelloRequest("world"));
+
+// This throws RequestValidationException because SayHelloRequest.To is marked as required
+await mediator.Send(new SayHelloRequest(null));
+```
 
 
 ## Building, releasing and versioning
