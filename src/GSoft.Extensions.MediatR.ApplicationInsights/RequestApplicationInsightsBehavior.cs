@@ -21,9 +21,7 @@ internal sealed class RequestApplicationInsightsBehavior<TRequest, TResponse> : 
 
     private async Task<TResponse> HandleWithTelemetry(TRequest request, RequestHandlerDelegate<TResponse> next)
     {
-        var requestName = request.GetType().Name;
-
-        using (var operation = this._telemetryClient.StartOperation<DependencyTelemetry>(requestName))
+        using (var operation = this._telemetryClient.StartOperation<DependencyTelemetry>(request.GetType().Name))
         {
             operation.Telemetry.Type = ApplicationInsightsConstants.TelemetryType;
 

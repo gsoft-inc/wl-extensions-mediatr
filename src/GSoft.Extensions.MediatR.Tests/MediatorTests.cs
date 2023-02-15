@@ -70,6 +70,7 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
 
         this._logs.AssertRequestSuccessful("Stream request SampleStreamRequest");
         this._activities.AssertRequestSuccessful("SampleStreamRequest");
+        this._telemetry.AssertRequestSuccessful("SampleStreamRequest");
     }
 
     [Fact]
@@ -80,6 +81,7 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
 
         this._logs.AssertRequestFailed("Stream request SampleStreamRequest");
         this._activities.AssertRequestFailed("SampleStreamRequest", exception);
+        this._telemetry.AssertRequestFailed("SampleStreamRequest", exception);
     }
 
     [Fact]
@@ -94,6 +96,7 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
 
         this._logs.AssertRequestFailed("Stream request SampleStreamRequest");
         this._activities.AssertRequestFailed("SampleStreamRequest", exception);
+        this._telemetry.AssertRequestFailed("SampleStreamRequest", exception);
     }
 
     [Fact]
