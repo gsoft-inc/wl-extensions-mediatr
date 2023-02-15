@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using MediatR;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
-using Microsoft.ApplicationInsights.Extensibility;
 
 namespace GSoft.Extensions.MediatR;
 
@@ -24,13 +23,13 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
 
     private async IAsyncEnumerable<TResponse> HandleWithTelemetryAsync(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var originalActivity = Activity.Current;
+        var originatingActivity = Activity.Current;
 
-        var operation = this._telemetryClient.StartOperation<DependencyTelemetry>(request.GetType().Name);
+        var operation = this._telemetryClient!.StartOperation<DependencyTelemetry>(request.GetType().Name);
 
         try
         {
-            var operationId = GetCompatibleApplicationInsightsOperationId(originalActivity);
+            var operationId = GetCompatibleApplicationInsightsOperationId(originatingActivity);
             if (operationId != null)
             {
                 operation.Telemetry.Id = operationId;
@@ -47,7 +46,20 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
             catch (Exception ex)
             {
                 operation.Telemetry.Success = false;
-                this._telemetryClient?.TrackException(ex);
+
+                if (originatingActivity == null)
+                {
+                    this._telemetryClient!.TrackException(ex);
+                }
+                else
+                {
+                    // Make sure the exception telemetry being sent is attached to the originating activity
+                    originatingActivity.ExecuteAsCurrentActivity(new ExceptionState(this._telemetryClient!, ex), static x =>
+                    {
+                        x.TelemetryClient.TrackException(x.Exception);
+                    });
+                }
+
                 throw;
             }
 
@@ -64,7 +76,20 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
                     catch (Exception ex)
                     {
                         operation.Telemetry.Success = false;
-                        this._telemetryClient?.TrackException(ex);
+
+                        if (originatingActivity == null)
+                        {
+                            this._telemetryClient!.TrackException(ex);
+                        }
+                        else
+                        {
+                            // Make sure the exception telemetry being sent is attached to the originating activity
+                            originatingActivity.ExecuteAsCurrentActivity(new ExceptionState(this._telemetryClient!, ex), static x =>
+                            {
+                                x.TelemetryClient.TrackException(x.Exception);
+                            });
+                        }
+
                         throw;
                     }
 
@@ -79,7 +104,16 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
         }
         finally
         {
-            DisposeWithCurrentActivity(originalActivity, operation);
+            // The dependency telemetry is sent when the operation is disposed
+            if (originatingActivity == null)
+            {
+                operation.Dispose();
+            }
+            else
+            {
+                // Attach the telemetry to the originating activity
+                originatingActivity.ExecuteAsCurrentActivity(operation, static x => x.Dispose());
+            }
         }
     }
 
@@ -103,20 +137,17 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
         };
     }
 
-    private static void DisposeWithCurrentActivity(Activity? activity, IOperationHolder<DependencyTelemetry> operation)
+    // Using a closure to capture these properties would have create a hidden reference and unnecessary allocations
+    private readonly struct ExceptionState
     {
-        // There is no guarantee that Activity.Current is the same than at the beginning or the method because of the async enumerable flow
-        // Temporarily re-attach the original activity when disposing the operation item, ApplicationInsights SDK will use it
-        var currentActivity = Activity.Current;
-        Activity.Current = activity;
+        public ExceptionState(TelemetryClient telemetryClient, Exception exception)
+        {
+            this.TelemetryClient = telemetryClient;
+            this.Exception = exception;
+        }
 
-        try
-        {
-            operation.Dispose();
-        }
-        finally
-        {
-            Activity.Current = currentActivity;
-        }
+        public TelemetryClient TelemetryClient { get; }
+
+        public Exception Exception { get; }
     }
 }

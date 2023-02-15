@@ -15,7 +15,7 @@ internal sealed class StreamRequestTracingBehavior<TRequest, TResponse> : IStrea
 
     private static async IAsyncEnumerable<TResponse> HandleWithTracing(TRequest request, StreamHandlerDelegate<TResponse> next, Activity activity, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        using (activity)
+        try
         {
             activity.DisplayName = request.GetType().Name;
 
@@ -55,6 +55,10 @@ internal sealed class StreamRequestTracingBehavior<TRequest, TResponse> : IStrea
             }
 
             TracingHelper.MarkAsSuccessful(activity);
+        }
+        finally
+        {
+            activity.ExecuteAsCurrentActivity(activity, static x => x.Dispose());
         }
     }
 }

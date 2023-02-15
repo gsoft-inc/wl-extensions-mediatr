@@ -19,6 +19,7 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
 
     public async IAsyncEnumerable<TResponse> Handle(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        var originalActivity = Activity.Current;
         var requestName = request.GetType().Name;
 
         this._logger.StreamRequestStarted(requestName);
@@ -33,7 +34,20 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
         catch (Exception ex)
         {
             watch.Stop();
-            this._logger.StreamRequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
+
+            if (originalActivity == null)
+            {
+                this._logger.StreamRequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
+            }
+            else
+            {
+                // Make sure the logs being sent are attached to the originating activity
+                originalActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
+                {
+                    x.Logger.StreamRequestFailed(x.Exception, x.RequestName, x.Elapsed);
+                });
+            }
+
             throw;
         }
 
@@ -50,7 +64,20 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
                 catch (Exception ex)
                 {
                     watch.Stop();
-                    this._logger.StreamRequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
+
+                    if (originalActivity == null)
+                    {
+                        this._logger.StreamRequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
+                    }
+                    else
+                    {
+                        // Make sure the logs being sent are attached to the originating activity
+                        originalActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
+                        {
+                            x.Logger.StreamRequestFailed(x.Exception, x.RequestName, x.Elapsed);
+                        });
+                    }
+
                     throw;
                 }
 
@@ -62,6 +89,55 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
         }
 
         watch.Stop();
-        this._logger.StreamRequestSucceeded(requestName, watch.Elapsed.TotalSeconds);
+
+        if (originalActivity == null)
+        {
+            this._logger.StreamRequestSucceeded(requestName, watch.Elapsed.TotalSeconds);
+        }
+        else
+        {
+            // Make sure the logs being sent are attached to the originating activity
+            originalActivity.ExecuteAsCurrentActivity(new SuccessfulLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds), static x =>
+            {
+                x.Logger.StreamRequestSucceeded(x.RequestName, x.Elapsed);
+            });
+        }
+    }
+
+    // Using a closure to capture these properties would have create a hidden reference and unnecessary allocations
+    private readonly struct SuccessfulLoggerState
+    {
+        public SuccessfulLoggerState(ILogger logger, string requestName, double elapsed)
+        {
+            this.Logger = logger;
+            this.RequestName = requestName;
+            this.Elapsed = elapsed;
+        }
+
+        public ILogger Logger { get; }
+
+        public string RequestName { get; }
+
+        public double Elapsed { get; }
+    }
+
+    // Using a closure to capture these properties would have create a hidden reference and unnecessary allocations
+    private readonly struct FailedLoggerState
+    {
+        public FailedLoggerState(ILogger logger, string requestName, double elapsed, Exception exception)
+        {
+            this.Logger = logger;
+            this.RequestName = requestName;
+            this.Elapsed = elapsed;
+            this.Exception = exception;
+        }
+
+        public ILogger Logger { get; }
+
+        public string RequestName { get; }
+
+        public double Elapsed { get; }
+
+        public Exception Exception { get; }
     }
 }
