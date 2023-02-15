@@ -3,33 +3,48 @@
 [![nuget](https://img.shields.io/nuget/v/GSoft.Extensions.MediatR.svg?logo=nuget)](https://www.nuget.org/packages/GSoft.Extensions.MediatR/)
 [![build](https://img.shields.io/github/actions/workflow/status/gsoft-inc/gsoft-extensions-mediatr/publish.yml?logo=github&branch=main)](https://github.com/gsoft-inc/gsoft-extensions-mediatr/actions/workflows/publish.yml)
 
-## TODO
+This library ensures that [MediatR](https://github.com/jbogard/MediatR) is registered in the dependency injection container **as a singleton** and also adds several behaviors:
 
-Welcome to your new scaffolded library. Make sure to review these steps before committing. Delete this section when you're done.
-
-* Find all occurrences of `TODO` in generated files and replace them with what makes sense for your project.
-* Make sure that generated URLs are correct (NuGet badges, project GitHub URL, etc.)
-* Workflows ([GitHub actions](https://docs.github.com/en/actions)) are automatically registered so you don't have to do anything. These are the workflows:
-  * `.github/workflows/ci.yml`: Build, run tests and create a NuGet package without publishing it on pull requests only.
-  * `.github/workflows/publish.yml`: Build, run tests, and push the published package to your feed when committing on main branch or creating a `*.*.*` tag.
-  * `.github/workflows/semgrep.yml`: Security analysis for your code on pull requests and on a weekly basis with [Semgrep](https://semgrep.dev/docs/cli-reference/).
-* A [Renovate workflow from another gsoft-inc repository](https://github.com/gsoft-inc/gsoft-renovate-workflow) will take care of checking depencendies every day. This workflow will read this repository's `renovate.json` configuration. There is no need to add a `RENOVATE_TOKEN` secret, as it is already done is the other private repository.
-
-What's included:
-
-* Pipelines for pull request checks, continuous delivery package publishing, automated dependency updates, security checks.
-* Class library targeting .NET Standard, a Xunit-based test project, both built with .NET 6 SDK.
-* Public API breaking changes detection using [Microsoft.CodeAnalysis.PublicApiAnalyzers](https://github.com/dotnet/roslyn-analyzers/blob/main/src/PublicApiAnalyzers/PublicApiAnalyzers.Help.md), which is also used in .NET and many other open-souce projects source code.
-* Shared csproj properties with a `Directory.Build.props` file.
-* A `Build.ps1` script that can be executed to simulate a CI build locally.
-* A public `*.snk` key used to sign the assembly and make it [strong-named](https://learn.microsoft.com/en-us/dotnet/standard/assembly/strong-named). This is required by some ShareGate projects. It is also an industry standard: Microsoft, Polly, MediatR, Newtonsoft.Json, Moq, FluentAssertions, etc.
-* [Source Link](https://github.com/dotnet/sourcelink) support.
-* Issue templates, Apache License 2.0, markdown files for contributing and security required by GSec.
+* [Activity-based OpenTelemetry](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs) instrumentation
+* [High-performance logging](https://learn.microsoft.com/en-us/dotnet/core/extensions/logger-message-generator) with `Debug` log level
+* Data annotations support for request validation, similar to [ASP.NET Core model validation](https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation)
+* [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) instrumentation (in a [separate NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/))
 
 
 ## Getting started
 
-TODO
+Use the `AddMediator(params Assembly[] assemblies)` extension method on your dependency injection services (`IServiceCollection`) to automatically register all the MediatR request handlers from a given assembly.
+
+```csharp
+builder.Services.AddMediator(typeof(Program).Assembly);
+```
+
+If you use [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) and want to instrument your handlers, you can install the dedicated [NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/):
+
+```csharp
+builder.Services.AddMediator(typeof(Program).Assembly).AddApplicationInsights();
+```
+
+**Example**
+
+```csharp
+public sealed record SayHelloRequest([property: Required] string To) : IRequest<string>;
+
+public sealed class SayHelloRequestHandler : IRequestHandler<SayHelloRequest, string>
+{
+    public Task<string> Handle(SayHelloRequest request, CancellationToken cancellationToken)
+    {
+        return Task.FromResult($"Hello {request.To}!");
+    }
+}
+
+// [...]
+var mediator = serviceProvider.GetRequiredService<IMediator>();
+var result = await mediator.Send(new SayHelloRequest("world"));
+
+// This throws RequestValidationException because SayHelloRequest.To is marked as required
+await mediator.Send(new SayHelloRequest(null));
+```
 
 
 ## Building, releasing and versioning
