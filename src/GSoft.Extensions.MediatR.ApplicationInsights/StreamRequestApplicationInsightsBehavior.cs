@@ -42,20 +42,7 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
             catch (Exception ex)
             {
                 operation.Telemetry.Success = false;
-
-                if (originatingActivity == null)
-                {
-                    this._telemetryClient.TrackException(ex);
-                }
-                else
-                {
-                    // Make sure the exception telemetry being sent is attached to the originating activity
-                    originatingActivity.ExecuteAsCurrentActivity(new ExceptionState(this._telemetryClient, ex), static x =>
-                    {
-                        x.TelemetryClient.TrackException(x.Exception);
-                    });
-                }
-
+                operation.Telemetry.Properties.TryAdd(ApplicationInsightsConstants.Exception, ex.ToString());
                 throw;
             }
 
@@ -72,20 +59,7 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
                     catch (Exception ex)
                     {
                         operation.Telemetry.Success = false;
-
-                        if (originatingActivity == null)
-                        {
-                            this._telemetryClient.TrackException(ex);
-                        }
-                        else
-                        {
-                            // Make sure the exception telemetry being sent is attached to the originating activity
-                            originatingActivity.ExecuteAsCurrentActivity(new ExceptionState(this._telemetryClient, ex), static x =>
-                            {
-                                x.TelemetryClient.TrackException(x.Exception);
-                            });
-                        }
-
+                        operation.Telemetry.Properties.TryAdd(ApplicationInsightsConstants.Exception, ex.ToString());
                         throw;
                     }
 
@@ -111,19 +85,5 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
                 originatingActivity.ExecuteAsCurrentActivity(operation, static x => x.Dispose());
             }
         }
-    }
-
-    // Using a closure to capture these properties would have create a hidden reference and unnecessary allocations
-    private readonly struct ExceptionState
-    {
-        public ExceptionState(TelemetryClient telemetryClient, Exception exception)
-        {
-            this.TelemetryClient = telemetryClient;
-            this.Exception = exception;
-        }
-
-        public TelemetryClient TelemetryClient { get; }
-
-        public Exception Exception { get; }
     }
 }

@@ -7,11 +7,11 @@ namespace GSoft.Extensions.MediatR;
 internal sealed class RequestApplicationInsightsBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private readonly TelemetryClient? _telemetryClient;
+    private readonly TelemetryClient _telemetryClient;
 
     public RequestApplicationInsightsBehavior(TelemetryClient? telemetryClient = null)
     {
-        this._telemetryClient = telemetryClient;
+        this._telemetryClient = telemetryClient!;
     }
 
     public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -35,7 +35,7 @@ internal sealed class RequestApplicationInsightsBehavior<TRequest, TResponse> : 
             catch (Exception ex)
             {
                 operation.Telemetry.Success = false;
-                this._telemetryClient?.TrackException(ex);
+                operation.Telemetry.Properties.TryAdd(ApplicationInsightsConstants.Exception, ex.ToString());
                 throw;
             }
         }
