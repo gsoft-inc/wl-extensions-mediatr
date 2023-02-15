@@ -48,15 +48,14 @@ internal sealed class InMemoryTelemetryTracker : ITelemetryChannel
     {
         lock (this._telemetry)
         {
-            Assert.Equal(2, this._telemetry.Count);
-            var dependencyTelemetry = Assert.Single(this._telemetry.OfType<DependencyTelemetry>());
-            var exceptionTelemetry = Assert.Single(this._telemetry.OfType<ExceptionTelemetry>());
+            var dependencyTelemetry = Assert.IsType<DependencyTelemetry>(Assert.Single(this._telemetry));
 
             Assert.False(dependencyTelemetry.Success);
             Assert.Equal(requestName, dependencyTelemetry.Name);
             Assert.Equal("Mediator", dependencyTelemetry.Type);
 
-            Assert.Same(exception, exceptionTelemetry.Exception);
+            var exceptionStr = Assert.Contains(ApplicationInsightsConstants.Exception, dependencyTelemetry.Properties);
+            Assert.Contains(exception.GetType().Name, exceptionStr);
         }
     }
 }

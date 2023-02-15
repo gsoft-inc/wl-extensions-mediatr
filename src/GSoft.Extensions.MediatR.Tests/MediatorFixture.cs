@@ -28,10 +28,13 @@ public sealed class MediatorFixture : BaseUnitFixture
             return new TelemetryClient(configuration);
         });
 
-        // Add ApplicationInsights twice to verify we do not register duplicate behaviors
-        services.AddMediator(typeof(MediatorFixture).Assembly)
-            .AddApplicationInsights()
-            .AddApplicationInsights();
+        // Add MediatR with ApplicationInsights instrumentation
+        var builder = services.AddMediator(typeof(MediatorFixture).Assembly).AddApplicationInsights();
+
+        // We only want unique instances of ApplicationInsights behaviors in MediatR, so there is a test that ensures
+        // that only one instance of these behaviors is registered. Calling this method below multiple times as we do
+        // shouldn't create duplicate registered behaviors:
+        builder.AddApplicationInsights().AddApplicationInsights();
 
         return services;
     }
