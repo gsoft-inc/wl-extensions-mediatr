@@ -16,7 +16,6 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
         category: RuleCategories.Design,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     internal static readonly DiagnosticDescriptor HandlersShouldNotBePublicRule = new DiagnosticDescriptor(
@@ -26,7 +25,6 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
         category: RuleCategories.Design,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(

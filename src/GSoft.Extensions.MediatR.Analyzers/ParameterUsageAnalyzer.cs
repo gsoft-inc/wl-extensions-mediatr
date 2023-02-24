@@ -16,7 +16,6 @@ public sealed class ParameterUsageAnalyzer : DiagnosticAnalyzer
         category: RuleCategories.Design,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     internal static readonly DiagnosticDescriptor ProvideCancellationTokenRule = new DiagnosticDescriptor(
@@ -26,7 +25,6 @@ public sealed class ParameterUsageAnalyzer : DiagnosticAnalyzer
         category: RuleCategories.Design,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     internal static readonly DiagnosticDescriptor UseMethodEndingWithAsyncRule = new DiagnosticDescriptor(
@@ -36,7 +34,6 @@ public sealed class ParameterUsageAnalyzer : DiagnosticAnalyzer
         category: RuleCategories.Design,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(

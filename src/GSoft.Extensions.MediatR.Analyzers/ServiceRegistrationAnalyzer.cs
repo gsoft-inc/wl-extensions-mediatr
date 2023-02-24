@@ -16,7 +16,6 @@ public sealed class ServiceRegistrationAnalyzer : DiagnosticAnalyzer
         category: RuleCategories.Design,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(UseAddMediatorExtensionMethodRule);

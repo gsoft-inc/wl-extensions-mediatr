@@ -10,32 +10,29 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor UseCommandOrQuerySuffixRule = new DiagnosticDescriptor(
         id: RuleIdentifiers.UseCommandOrQuerySuffix,
-        title: "Name should end with Command or Query",
-        messageFormat: "Name should end with Command or Query",
+        title: "Name should end with 'Command' or 'Query'",
+        messageFormat: "Name should end with 'Command' or 'Query'",
         category: RuleCategories.Naming,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     internal static readonly DiagnosticDescriptor UseCommandHandlerOrQueryHandlerSuffixRule = new DiagnosticDescriptor(
         id: RuleIdentifiers.UseCommandHandlerOrQueryHandlerSuffix,
-        title: "Name should end with CommandHandler or QueryHandler",
-        messageFormat: "Name should end with CommandHandler or QueryHandler",
+        title: "Name should end with 'CommandHandler' or 'QueryHandler'",
+        messageFormat: "Name should end with 'CommandHandler' or 'QueryHandler'",
         category: RuleCategories.Naming,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     internal static readonly DiagnosticDescriptor UseStreamQuerySuffixRule = new DiagnosticDescriptor(
         id: RuleIdentifiers.UseStreamQuerySuffix,
-        title: "Name should end with StreamQuery",
-        messageFormat: "Name should end with StreamQuery",
+        title: "Name should end with 'StreamQuery'",
+        messageFormat: "Name should end with 'StreamQuery'",
         category: RuleCategories.Naming,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     internal static readonly DiagnosticDescriptor UseStreamQueryHandlerSuffixRule = new DiagnosticDescriptor(
@@ -45,7 +42,6 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
         category: RuleCategories.Naming,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     internal static readonly DiagnosticDescriptor UseNotificationOrEventSuffixRule = new DiagnosticDescriptor(
@@ -55,7 +51,6 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
         category: RuleCategories.Naming,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     internal static readonly DiagnosticDescriptor UseNotificationHandlerOrEventHandlerSuffixRule = new DiagnosticDescriptor(
@@ -65,7 +60,6 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
         category: RuleCategories.Naming,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: null,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
