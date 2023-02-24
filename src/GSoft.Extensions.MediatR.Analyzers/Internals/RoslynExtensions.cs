@@ -50,10 +50,10 @@ internal static class RoslynExtensions
 
     public static void ReportDiagnostic(this OperationAnalysisContext context, DiagnosticDescriptor diagnosticDescriptor, IInvocationOperation operation)
     {
-       var location = operation.Syntax.ChildNodes().FirstOrDefault() is MemberAccessExpressionSyntax memberAccessExpression
-        ? memberAccessExpression.Name.GetLocation()
-        : Location.None;
+        var location = operation.Syntax.ChildNodes().FirstOrDefault() is MemberAccessExpressionSyntax memberAccessExpression
+            ? memberAccessExpression.Name.GetLocation()
+            : Location.None;
+
         context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, location));
-        }
     }
 }
