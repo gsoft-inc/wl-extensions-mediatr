@@ -14,7 +14,7 @@ global using Microsoft.Extensions.DependencyInjection;
 global using System.Runtime.CompilerServices;
 global using MediatR;";
 
-        this.Helper = new CompilationHelper()
+        this.Builder = new CompilationBuilder()
             .WithAssemblyReference<IServiceCollection>() // Microsoft.Extensions.DependencyInjection
             .WithAssemblyReference<IMediator>() // MediatR and MediatR.Contracts
             .WithAssemblyReference(typeof(MediatorExtensions).Assembly) // GSoft.Extensions.MediatR (our assembly)
@@ -22,5 +22,5 @@ global using MediatR;";
             .WithAnalyzer<TAnalyzer>();
     }
 
-    internal CompilationHelper Helper { get; }
+    internal CompilationBuilder Builder { get; }
 }

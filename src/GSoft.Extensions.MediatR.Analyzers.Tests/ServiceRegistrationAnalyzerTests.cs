@@ -13,7 +13,7 @@ public class MyRegistrations
         services.AddMediatR(x => x.RegisterServicesFromAssembly(typeof(MyRegistrations).Assembly));
     }
 }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Same(ServiceRegistrationAnalyzer.UseAddMediatorExtensionMethodRule, Assert.Single(diagnostics).Descriptor);
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace GSoft.Extensions.MediatR.Analyzers.Tests;
 
 // This class can be copy-pasted and reused as-is in other Roslyn Analyzers test projects
-internal sealed class CompilationHelper
+internal sealed class CompilationBuilder
 {
     private const string GlobalUsingsFilename = "CSharp10GlobalUsings.cs";
     private const string GlobalUsingsSourceCode = @"
@@ -27,7 +27,7 @@ global using System.Threading.Tasks;
     private LanguageVersion _langVersion;
     private OutputKind _outputKind;
 
-    public CompilationHelper()
+    public CompilationBuilder()
     {
         this._references = new HashSet<MetadataReference>(GetAlreadyLoadedAssemblyReferences());
         this._sourceFiles = new Dictionary<string, string>();
@@ -44,36 +44,36 @@ global using System.Threading.Tasks;
             .Select(x => MetadataReference.CreateFromFile(x.Location));
     }
 
-    public CompilationHelper WithCSharpLanguageVersion(LanguageVersion langVersion)
+    public CompilationBuilder WithCSharpLanguageVersion(LanguageVersion langVersion)
     {
         this._langVersion = langVersion;
         return this;
     }
 
-    public CompilationHelper WithOutputKind(OutputKind outputKind)
+    public CompilationBuilder WithOutputKind(OutputKind outputKind)
     {
         this._outputKind = outputKind;
         return this;
     }
 
-    public CompilationHelper WithAssemblyReference<T>()
+    public CompilationBuilder WithAssemblyReference<T>()
     {
         return this.WithAssemblyReference(typeof(T).Assembly);
     }
 
-    public CompilationHelper WithAssemblyReference(Assembly assembly)
+    public CompilationBuilder WithAssemblyReference(Assembly assembly)
     {
         this._references.Add(MetadataReference.CreateFromFile(assembly.Location));
         return this;
     }
 
-    public CompilationHelper WithSourceFile(string filename, string contents)
+    public CompilationBuilder WithSourceFile(string filename, string contents)
     {
         this._sourceFiles.Add(filename, contents);
         return this;
     }
 
-    public CompilationHelper WithAnalyzer<T>()
+    public CompilationBuilder WithAnalyzer<T>()
         where T : DiagnosticAnalyzer, new()
     {
         this._analyzers.Add(new T());

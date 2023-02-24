@@ -6,7 +6,7 @@ public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTests<NamingConv
     public async Task Request_Ending_With_Command_Returns_No_Diagnostic()
     {
         const string source = "public class MyCommand : IRequest { }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -14,7 +14,7 @@ public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTests<NamingConv
     public async Task Request_Ending_With_Query_Returns_No_Diagnostic()
     {
         const string source = "public class MyQuery : IRequest<string> { }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -22,7 +22,7 @@ public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTests<NamingConv
     public async Task StreamRequest_Ending_With_StreamQuery_Returns_No_Diagnostic()
     {
         const string source = "public class MyStreamQuery : IStreamRequest<string> { }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -30,7 +30,7 @@ public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTests<NamingConv
     public async Task Notification_Ending_With_Notification_Returns_No_Diagnostic()
     {
         const string source = "public class MyNotification : INotification { }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -38,7 +38,7 @@ public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTests<NamingConv
     public async Task Notification_Ending_With_Event_Returns_No_Diagnostic()
     {
         const string source = "public class MyEvent : INotification { }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -46,7 +46,7 @@ public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTests<NamingConv
     public async Task Request_Not_Ending_With_Command_Or_Query_Returns_One_Diagnostic()
     {
         const string source = "public class MyClass : IRequest<string> { }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Same(NamingConventionAnalyzer.UseCommandOrQuerySuffixRule, Assert.Single(diagnostics).Descriptor);
     }
 
@@ -54,7 +54,7 @@ public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTests<NamingConv
     public async Task StreamRequest_Not_Ending_With_StreamQuery_Returns_One_Diagnostic()
     {
         const string source = "public class MyClass : IStreamRequest<string> { }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Same(NamingConventionAnalyzer.UseStreamQuerySuffixRule, Assert.Single(diagnostics).Descriptor);
     }
 
@@ -62,7 +62,7 @@ public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTests<NamingConv
     public async Task Notification_Not_Ending_With_Notification_Or_Event_Returns_One_Diagnostic()
     {
         const string source = "public class MyClass : INotification { }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Same(NamingConventionAnalyzer.UseNotificationOrEventSuffixRule, Assert.Single(diagnostics).Descriptor);
     }
 
@@ -76,7 +76,7 @@ internal class MyCommandHandler : IRequestHandler<MyCommand>
 {
     public Task Handle(MyCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -90,7 +90,7 @@ internal class MyQueryHandler : IRequestHandler<MyQuery, string>
 {
     public Task<string> Handle(MyQuery query, CancellationToken cancellationToken) => Task.FromResult(string.Empty);
 }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -107,7 +107,7 @@ internal class MyStreamQueryHandler : IStreamRequestHandler<MyStreamQuery, strin
         yield break;
     }
 }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -121,7 +121,7 @@ internal class MyNotificationHandler : INotificationHandler<MyNotification>
 {
     public Task Handle(MyNotification notification, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -135,7 +135,7 @@ internal class MyEventHandler : INotificationHandler<MyEvent>
 {
     public Task Handle(MyEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Empty(diagnostics);
     }
 
@@ -149,7 +149,7 @@ internal class MyRequestHandler : IRequestHandler<MyCommand>
 {
     public Task Handle(MyCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Same(NamingConventionAnalyzer.UseCommandHandlerOrQueryHandlerSuffixRule, Assert.Single(diagnostics).Descriptor);
     }
 
@@ -166,7 +166,7 @@ internal class MyStreamRequestHandler : IStreamRequestHandler<MyStreamQuery, str
         yield break;
     }
 }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Same(NamingConventionAnalyzer.UseStreamQueryHandlerSuffixRule, Assert.Single(diagnostics).Descriptor);
     }
 
@@ -180,7 +180,7 @@ internal class SomethingHandler : INotificationHandler<MyNotification>
 {
     public Task Handle(MyNotification notification, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        var diagnostics = await this.Helper.WithSourceFile("Program.cs", source).Compile();
+        var diagnostics = await this.Builder.WithSourceFile("Program.cs", source).Compile();
         Assert.Same(NamingConventionAnalyzer.UseNotificationHandlerOrEventHandlerSuffixRule, Assert.Single(diagnostics).Descriptor);
     }
 }
