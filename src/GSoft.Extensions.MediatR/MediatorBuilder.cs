@@ -1,7 +1,6 @@
 using System.Reflection;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GSoft.Extensions.MediatR;
 
@@ -9,46 +8,80 @@ public sealed class MediatorBuilder
 {
     internal MediatorBuilder(IServiceCollection services, IEnumerable<Assembly> assemblies, Action<MediatRServiceConfiguration>? configure)
     {
-        services.AddMediatR(assemblies, ConfigurationFactory(configure));
-        RegisterBehaviors(services);
+        void RegisterAssemblies(MediatRServiceConfiguration configuration)
+        {
+            foreach (var assembly in assemblies)
+            {
+                configuration.RegisterServicesFromAssembly(assembly);
+            }
+        }
+
+        EnsureAddMediatorIsOnlyCalledOnce(services);
+        services.AddMediatR(ConfigurationFactory(RegisterAssemblies, configure));
         this.Services = services;
     }
 
     internal MediatorBuilder(IServiceCollection services, IEnumerable<Type> handlerAssemblyMarkerTypes, Action<MediatRServiceConfiguration>? configure)
     {
-        services.AddMediatR(handlerAssemblyMarkerTypes, ConfigurationFactory(configure));
-        RegisterBehaviors(services);
+        void RegisterAssembliesOfTypes(MediatRServiceConfiguration configuration)
+        {
+            foreach (var type in handlerAssemblyMarkerTypes)
+            {
+                configuration.RegisterServicesFromAssemblyContaining(type);
+            }
+        }
+
+        EnsureAddMediatorIsOnlyCalledOnce(services);
+        services.AddMediatR(ConfigurationFactory(RegisterAssembliesOfTypes, configure));
         this.Services = services;
     }
 
     public IServiceCollection Services { get; }
 
-    private static Action<MediatRServiceConfiguration> ConfigurationFactory(Action<MediatRServiceConfiguration>? userDefinedConfigure)
+    private static void EnsureAddMediatorIsOnlyCalledOnce(IServiceCollection services)
+    {
+        // If a service descriptor references one of our internal behaviors, it means we already executed our AddMediator method.
+        // We prevent this because MediatR's "AddMediatR" method doesn't completely check for duplicate registration of behaviors
+        // and might register duplicate behaviors if someone call this method multiple times
+        // This will be addressed in https://github.com/jbogard/MediatR/pull/860
+        if (services.Any(x => x.ImplementationType == typeof(RequestTracingBehavior<,>)))
+        {
+            throw new InvalidOperationException(nameof(ServiceCollectionExtensions.AddMediator) + " cannot be called multiple times");
+        }
+    }
+
+    private static Action<MediatRServiceConfiguration> ConfigurationFactory(Action<MediatRServiceConfiguration> configureRegistrations, Action<MediatRServiceConfiguration>? userDefinedConfigure)
     {
         void Configure(MediatRServiceConfiguration configuration)
         {
-            userDefinedConfigure?.Invoke(configuration);
+            ConfigureDefaultConfiguration(configuration);
 
-            // Force IMediator to be registered as singleton, we don't want to create a new instance of Mediator every time
-            // Request handlers are still registered as transient though
-            configuration.AsSingleton();
+            configureRegistrations(configuration);
+
+            // Allow developers to override default configuration if needed
+            userDefinedConfigure?.Invoke(configuration);
         }
 
         return Configure;
     }
 
-    private static void RegisterBehaviors(IServiceCollection services)
+    private static void ConfigureDefaultConfiguration(MediatRServiceConfiguration configuration)
     {
+        // By default, register IMediator as a singleton, we don't want to create a new instance of Mediator every time
+        // Request handlers are still registered as transient though
+        configuration.Lifetime = ServiceLifetime.Singleton;
+
+        // Register open singleton behaviors, invoked for any type of request
         // OpenTelemetry tracing first
-        services.TryAddEnumerable(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(RequestTracingBehavior<,>), ServiceLifetime.Singleton));
-        services.TryAddEnumerable(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestTracingBehavior<,>), ServiceLifetime.Singleton));
+        configuration.BehaviorsToRegister.Add(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(RequestTracingBehavior<,>), ServiceLifetime.Singleton));
+        configuration.BehaviorsToRegister.Add(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestTracingBehavior<,>), ServiceLifetime.Singleton));
 
         // Then logging, so the logs can be linked to the parent traces
-        services.TryAddEnumerable(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(RequestLoggingBehavior<,>), ServiceLifetime.Singleton));
-        services.TryAddEnumerable(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestLoggingBehavior<,>), ServiceLifetime.Singleton));
+        configuration.BehaviorsToRegister.Add(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(RequestLoggingBehavior<,>), ServiceLifetime.Singleton));
+        configuration.BehaviorsToRegister.Add(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestLoggingBehavior<,>), ServiceLifetime.Singleton));
 
         // Then validation so errors can be recorded by tracing and logging
-        services.TryAddEnumerable(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>), ServiceLifetime.Singleton));
-        services.TryAddEnumerable(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestValidationBehavior<,>), ServiceLifetime.Singleton));
+        configuration.BehaviorsToRegister.Add(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>), ServiceLifetime.Singleton));
+        configuration.BehaviorsToRegister.Add(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestValidationBehavior<,>), ServiceLifetime.Singleton));
     }
 }

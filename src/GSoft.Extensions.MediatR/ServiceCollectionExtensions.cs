@@ -1,14 +1,12 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using GSoft.Extensions.MediatR;
-using MediatR;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection;
 
-[ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtensions
 {
+    // Having our own extension methods to add MediatR protects consumers from future MediatR API breaking changes
     public static MediatorBuilder AddMediator(this IServiceCollection services, params Assembly[] assemblies)
     {
         return new MediatorBuilder(services, assemblies, configure: null);

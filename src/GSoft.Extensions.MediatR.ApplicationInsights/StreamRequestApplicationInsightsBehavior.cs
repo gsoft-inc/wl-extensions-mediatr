@@ -7,7 +7,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 namespace GSoft.Extensions.MediatR;
 
 internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TResponse> : IStreamPipelineBehavior<TRequest, TResponse>
-    where TRequest : IStreamRequest<TResponse>
+    where TRequest : notnull
 {
     private readonly TelemetryClient _telemetryClient;
 
@@ -43,6 +43,7 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
             {
                 operation.Telemetry.Success = false;
                 operation.Telemetry.Properties.TryAdd(ApplicationInsightsConstants.Exception, ex.ToString());
+
                 throw;
             }
 
@@ -60,6 +61,7 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
                     {
                         operation.Telemetry.Success = false;
                         operation.Telemetry.Properties.TryAdd(ApplicationInsightsConstants.Exception, ex.ToString());
+
                         throw;
                     }
 

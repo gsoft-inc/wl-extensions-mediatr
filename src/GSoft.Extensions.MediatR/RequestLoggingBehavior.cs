@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace GSoft.Extensions.MediatR;
 
 internal sealed class RequestLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     private readonly ILogger<RequestLoggingBehavior<TRequest, TResponse>> _logger;
 
@@ -18,6 +18,7 @@ internal sealed class RequestLoggingBehavior<TRequest, TResponse> : IPipelineBeh
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
+        var originatingActivity = Activity.Current;
         var requestName = request.GetType().Name;
 
         this._logger.RequestStarted(requestName);
@@ -28,14 +29,38 @@ internal sealed class RequestLoggingBehavior<TRequest, TResponse> : IPipelineBeh
             var response = await next().ConfigureAwait(false);
 
             watch.Stop();
-            this._logger.RequestSucceeded(requestName, watch.Elapsed.TotalSeconds);
+
+            if (originatingActivity == null)
+            {
+                this._logger.RequestSucceeded(requestName, watch.Elapsed.TotalSeconds);
+            }
+            else
+            {
+                // Make sure the logs being sent are attached to the originating activity
+                originatingActivity.ExecuteAsCurrentActivity(new SuccessfulLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds), static x =>
+                {
+                    x.Logger.RequestSucceeded(x.RequestName, x.Elapsed);
+                });
+            }
 
             return response;
         }
         catch (Exception ex)
         {
             watch.Stop();
-            this._logger.RequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
+
+            if (originatingActivity == null)
+            {
+                this._logger.RequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
+            }
+            else
+            {
+                // Make sure the logs being sent are attached to the originating activity
+                originatingActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
+                {
+                    x.Logger.RequestFailed(x.Exception, x.RequestName, x.Elapsed);
+                });
+            }
 
             throw;
         }

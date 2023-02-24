@@ -5,7 +5,7 @@ using MediatR;
 namespace GSoft.Extensions.MediatR;
 
 internal sealed class StreamRequestTracingBehavior<TRequest, TResponse> : IStreamPipelineBehavior<TRequest, TResponse>
-    where TRequest : IStreamRequest<TResponse>
+    where TRequest : notnull
 {
     public IAsyncEnumerable<TResponse> Handle(TRequest request, StreamHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
