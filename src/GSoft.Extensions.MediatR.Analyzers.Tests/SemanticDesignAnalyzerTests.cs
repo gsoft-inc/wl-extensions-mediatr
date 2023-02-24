@@ -29,7 +29,7 @@ internal class MyQueryHandler : IRequestHandler<MyQuery, string>
     }
 }";
 
-        var diagnostics = await this.Builder.WithSourceFile(source).Compile();
+        var diagnostics = await this.Builder.WithSourceCode(source).Compile();
         Assert.Equal(2, diagnostics.Length);
         Assert.All(diagnostics, x => Assert.Same(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, x.Descriptor));
     }
@@ -57,7 +57,7 @@ internal class MyQueryHandler : IRequestHandler<MyQuery, string>
         return string.Empty;
     }
 }";
-        await this.Builder.WithSourceFile(source).ShouldCompileWithoutDiagnostics();
+        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
     }
 
     [Fact]
@@ -70,6 +70,6 @@ public class MyQueryHandler : IRequestHandler<MyQuery, string>
 {
     public Task<string> Handle(MyQuery query, CancellationToken cancellationToken) => Task.FromResult(string.Empty);
 }";
-        await this.Builder.WithSourceFile(source).ShouldCompileWithDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotBePublicRule);
+        await this.Builder.WithSourceCode(source).ShouldCompileWithDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotBePublicRule);
     }
 }

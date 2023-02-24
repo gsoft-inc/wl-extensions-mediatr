@@ -67,7 +67,7 @@ global using System.Threading.Tasks;
         return this;
     }
 
-    public CompilationBuilder WithSourceFile(string contents)
+    public CompilationBuilder WithSourceCode(string contents)
     {
         return this.WithSourceFile(Guid.NewGuid().ToString("N") + ".cs", contents);
     }
