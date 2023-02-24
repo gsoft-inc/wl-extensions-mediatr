@@ -9,6 +9,7 @@ This library ensures that [MediatR](https://github.com/jbogard/MediatR) is regis
 * [High-performance logging](https://learn.microsoft.com/en-us/dotnet/core/extensions/logger-message-generator) with `Debug` log level
 * Data annotations support for request validation, similar to [ASP.NET Core model validation](https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation)
 * [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) instrumentation (in a [separate NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/))
+* CQRS conventions and MediatR best practices with Roslyn analyers 
 
 
 ## Getting started
@@ -45,6 +46,31 @@ var result = await mediator.Send(new SayHelloRequest("world"));
 // This throws RequestValidationException because SayHelloRequest.To is marked as required
 await mediator.Send(new SayHelloRequest(null));
 ```
+
+
+## Included Roslyn analyzers
+
+| Rule ID | Category | Severity | Description                                                  |
+|---------|----------|----------|--------------------------------------------------------------|
+| GMDTR01 | Naming   | Warning  | Name should end with 'Command' or 'Query'                    |
+| GMDTR02 | Naming   | Warning  | Name should end with 'CommandHandler' or 'QueryHandler'      |
+| GMDTR03 | Naming   | Warning  | Name should end with 'StreamQuery'                           |
+| GMDTR04 | Naming   | Warning  | Name should end with 'StreamQueryHandler'                    |
+| GMDTR05 | Naming   | Warning  | Name should end with 'Notification' or 'Event'               |
+| GMDTR06 | Naming   | Warning  | Name should end with 'NotificationHandler' or 'EventHandler' |
+| GMDTR07 | Design   | Warning  | Use generic method instead                                   |
+| GMDTR08 | Design   | Warning  | Provide a cancellation token                                 |
+| GMDTR09 | Design   | Warning  | Handlers should not call other handlers                      |
+| GMDTR10 | Design   | Warning  | Handlers should not be public                                |
+| GMDTR11 | Design   | Warning  | Use 'AddMediator' extension method instead of 'AddMediatR'   |
+| GMDTR12 | Design   | Warning  | Use method ending with 'Async' instead                       |
+
+In order to change the severity of one of these diagnostic rules, use a `.editorconfig` file, for instance:
+```ini
+[*.cs]
+dotnet_diagnostic.GMDTR01.severity = none
+```
+To learn more about how to configure or suppress code analysis warnings, [read this documentation](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/suppress-warnings). 
 
 
 ## Building, releasing and versioning
