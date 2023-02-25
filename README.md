@@ -9,7 +9,7 @@ This library ensures that [MediatR](https://github.com/jbogard/MediatR) is regis
 * [High-performance logging](https://learn.microsoft.com/en-us/dotnet/core/extensions/logger-message-generator) with `Debug` log level
 * Data annotations support for request validation, similar to [ASP.NET Core model validation](https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation)
 * [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) instrumentation (in a [separate NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/))
-* CQRS conventions and MediatR best practices with Roslyn analyers 
+* [CQRS](https://microservices.io/patterns/data/cqrs.html) conventions and MediatR best practices with Roslyn analyers 
 
 
 ## Getting started
