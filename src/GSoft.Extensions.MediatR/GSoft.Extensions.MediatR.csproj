@@ -39,9 +39,12 @@
 
   <PropertyGroup>
     <!--
-    Insert custom target to embed our Roslyn analyzers to the generated package (https://stackoverflow.com/q/40396161/825695).
-    The idea is to insert the analyzers DLL to the corresponding analyzers directory during packing.
-    Microsoft does something similar to this with several packages including the source generators in Microsoft.Extensions.Logging.Abstractions.
+    Here we use some advanced MSBuild to embed our Roslyn analyzers into the generated package.
+    The idea is to only insert the analyzers DLL into the corresponding analyzers directory (analyzers\dotnet\cs) of the NuGet package, during the packing phase.
+    Here is the official documentation about this process: https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets#targetsfortfmspecificcontentinpackage
+    This technique was originally found here: https://stackoverflow.com/q/40396161/825695
+    Microsoft does something similar with several packages, including the source generators embed in Microsoft.Extensions.Logging.Abstractions.
+    However their MSBuild engineering is way more complicated and reused through the entire .NET runtime monorepo. We don't want that kind of complexity here.
     -->
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
