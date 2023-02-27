@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../GSoft.Extensions.MediatR.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+    "Microsoft.CodeAnalysis.*" packages allow the development of Roslyn analyzers and source generators.
+    These packages also define the minimum .NET compiler version required by consumer developer IDEs and build agents:
+    https://learn.microsoft.com/bs-latn-ba/visualstudio/extensibility/roslyn-version-support
+    
+    In other words, targeting a lower package version increases the compatibility of our custom Roslyn analyzers with consumers.
+    The only reasons why we would eventually upgrade this package are:
+     - If we want to use newer Roslyn APIs,
+     - If there's a vulnerability in these packages.
+    Right now, our Roslyn analyzers are simple enough to stick to 2021's 3.9.0 Roslyn APIs.
+    -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.9.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="GSoft.Extensions.MediatR.Analyzers.Tests,PublicKey=002400000480000094000000060200000024000052534131000400000100010025301ce547647ab5ac9264ade0f9cdc0252796a257095add4791b0232c1def21bb9e0c87d218713f918565b23394362dbcb058e210c853a24ec33e6925ebedf654a0d65efb3828c855ff21eaaa67aeb9b24b81b8baff582a03df6ab04424c7e53cacbfe84d2765ce840389f900c55824d037d2c5b6b330ac0188a06ef6869dba" />
+  </ItemGroup>
+</Project>
