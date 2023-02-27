@@ -5,10 +5,11 @@ internal static class KnownSymbolNames
     public const string MsExtDIAbstractionsAssembly = "Microsoft.Extensions.DependencyInjection.Abstractions";
     public const string MediatRAssembly = "MediatR";
     public const string MediatRContractsAssembly = "MediatR.Contracts";
+    public const string GSoftExtMediatRAssembly = "GSoft.Extensions.MediatR";
 
-    public const string CancellationTokenStruct = "System.Threading.CancellationToken";
     public const string ServiceCollectionInterface = "Microsoft.Extensions.DependencyInjection.IServiceCollection";
     public const string ServiceCollectionExtensionsClass = "Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions";
+    public const string GSoftMediatorExtensionsClass = "MediatR.MediatorExtensions";
 
     public const string BaseRequestInterface = "MediatR.IBaseRequest";
     public const string RequestHandlerInterfaceT1 = "MediatR.IRequestHandler`1";
@@ -28,4 +29,5 @@ internal static class KnownSymbolNames
     public const string SendMethod = "Send";
     public const string PublishMethod = "Publish";
     public const string CreateStreamMethod = "CreateStream";
+    public const string SendAsyncMethod = "SendAsync";
 }
