@@ -6,29 +6,39 @@ using MediatR;
 
 namespace GSoft.Extensions.MediatR.Tests;
 
-internal sealed record SampleRequest([property: Required] string RequiredValue, bool IsSuccessful) : IRequest<string>;
+internal sealed record SampleQuery([property: Required] string RequiredValue, bool IsSuccessful) : IRequest<string>;
 
-internal sealed class SampleRequestHandler : IRequestHandler<SampleRequest, string>
+internal sealed class SampleQueryHandler : IRequestHandler<SampleQuery, string>
 {
-    public Task<string> Handle(SampleRequest request, CancellationToken cancellationToken)
+    public Task<string> Handle(SampleQuery query, CancellationToken cancellationToken)
     {
-        return request.IsSuccessful ? Task.FromResult($"Hello {request.RequiredValue}!") : throw new InvalidOperationException("Something wrong happened");
+        return query.IsSuccessful ? Task.FromResult($"Hello {query.RequiredValue}!") : throw new InvalidOperationException("Something wrong happened");
     }
 }
 
-internal sealed record SampleStreamRequest([property: Required] string RequiredValue, bool IsSuccessful) : IStreamRequest<string>;
+internal sealed record SampleCommand([property: Required] string RequiredValue, bool IsSuccessful) : IRequest;
 
-internal sealed class SampleStreamQueryHandler : IStreamRequestHandler<SampleStreamRequest, string>
+internal sealed class SampleCommandHandler : IRequestHandler<SampleCommand>
 {
-    public async IAsyncEnumerable<string> Handle(SampleStreamRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public Task Handle(SampleCommand command, CancellationToken cancellationToken)
+    {
+        return command.IsSuccessful ? Task.CompletedTask : throw new InvalidOperationException("Something wrong happened");
+    }
+}
+
+internal sealed record SampleStreamQuery([property: Required] string RequiredValue, bool IsSuccessful) : IStreamRequest<string>;
+
+internal sealed class SampleStreamQueryHandler : IStreamRequestHandler<SampleStreamQuery, string>
+{
+    public async IAsyncEnumerable<string> Handle(SampleStreamQuery query, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         yield return "Hello";
 
-        if (!request.IsSuccessful)
+        if (!query.IsSuccessful)
         {
             throw new InvalidOperationException("Something wrong happened");
         }
 
-        yield return request.RequiredValue + "!";
+        yield return query.RequiredValue + "!";
     }
 }

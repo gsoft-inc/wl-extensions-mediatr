@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace GSoft.Extensions.MediatR;
 
 internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStreamPipelineBehavior<TRequest, TResponse>
-    where TRequest : IStreamRequest<TResponse>
+    where TRequest : notnull
 {
     private readonly ILogger<StreamRequestLoggingBehavior<TRequest, TResponse>> _logger;
 
@@ -102,42 +102,5 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
                 x.Logger.StreamRequestSucceeded(x.RequestName, x.Elapsed);
             });
         }
-    }
-
-    // Using a closure to capture these properties would have create a hidden reference and unnecessary allocations
-    private readonly struct SuccessfulLoggerState
-    {
-        public SuccessfulLoggerState(ILogger logger, string requestName, double elapsed)
-        {
-            this.Logger = logger;
-            this.RequestName = requestName;
-            this.Elapsed = elapsed;
-        }
-
-        public ILogger Logger { get; }
-
-        public string RequestName { get; }
-
-        public double Elapsed { get; }
-    }
-
-    // Using a closure to capture these properties would have create a hidden reference and unnecessary allocations
-    private readonly struct FailedLoggerState
-    {
-        public FailedLoggerState(ILogger logger, string requestName, double elapsed, Exception exception)
-        {
-            this.Logger = logger;
-            this.RequestName = requestName;
-            this.Elapsed = elapsed;
-            this.Exception = exception;
-        }
-
-        public ILogger Logger { get; }
-
-        public string RequestName { get; }
-
-        public double Elapsed { get; }
-
-        public Exception Exception { get; }
     }
 }

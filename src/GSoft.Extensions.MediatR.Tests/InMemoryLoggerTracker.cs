@@ -1,14 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace GSoft.Extensions.MediatR.Tests;
 
 internal sealed class InMemoryLoggerTracker : ILoggerProvider, ILogger
 {
-    private readonly List<string> _logs;
+    private readonly List<LogRecord> _logs;
 
     public InMemoryLoggerTracker()
     {
-        this._logs = new List<string>();
+        this._logs = new List<LogRecord>();
     }
 
     public ILogger CreateLogger(string categoryName)
@@ -20,7 +21,7 @@ internal sealed class InMemoryLoggerTracker : ILoggerProvider, ILogger
     {
         lock (this._logs)
         {
-            this._logs.Add(formatter(state, exception));
+            this._logs.Add(new LogRecord(formatter(state, exception), Activity.Current?.Id));
         }
     }
 
@@ -43,8 +44,10 @@ internal sealed class InMemoryLoggerTracker : ILoggerProvider, ILogger
         lock (this._logs)
         {
             Assert.Equal(2, this._logs.Count);
-            Assert.Single(this._logs, x => x.StartsWith(startsWith + " started"));
-            Assert.Single(this._logs, x => x.StartsWith(startsWith + " ended successfully"));
+            Assert.StartsWith(startsWith + " started", this._logs[0].Text);
+            Assert.StartsWith(startsWith + " ended successfully", this._logs[1].Text);
+            Assert.NotNull(this._logs[0].ActivityId);
+            Assert.Equal(this._logs[0].ActivityId, this._logs[1].ActivityId);
         }
     }
 
@@ -53,10 +56,14 @@ internal sealed class InMemoryLoggerTracker : ILoggerProvider, ILogger
         lock (this._logs)
         {
             Assert.Equal(2, this._logs.Count);
-            Assert.Single(this._logs, x => x.StartsWith(startsWith + " started"));
-            Assert.Single(this._logs, x => x.StartsWith(startsWith + " failed after"));
+            Assert.StartsWith(startsWith + " started", this._logs[0].Text);
+            Assert.StartsWith(startsWith + " failed after", this._logs[1].Text);
+            Assert.NotNull(this._logs[0].ActivityId);
+            Assert.Equal(this._logs[0].ActivityId, this._logs[1].ActivityId);
         }
     }
+
+    private sealed record LogRecord(string Text, string? ActivityId);
 
     private sealed class NoopDisposable : IDisposable
     {

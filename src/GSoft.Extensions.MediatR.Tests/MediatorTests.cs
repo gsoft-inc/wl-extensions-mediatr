@@ -23,110 +23,146 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
     }
 
     [Fact]
-    public async Task Send_Request_Works_When_Handler_Is_Succesful()
+    public async Task Send_Query_Works_When_Handler_Is_Succesful()
     {
-        var result = await this._mediator.Send(new SampleRequest("world", IsSuccessful: true));
+        var result = await this._mediator.SendAsync(new SampleQuery("world", IsSuccessful: true), CancellationToken.None);
         Assert.Equal("Hello world!", result);
 
-        this._logs.AssertRequestSuccessful("Request SampleRequest");
-        this._activities.AssertRequestSuccessful("SampleRequest");
-        this._telemetry.AssertRequestSuccessful("SampleRequest");
+        this._logs.AssertRequestSuccessful("Request SampleQuery");
+        this._activities.AssertRequestSuccessful("SampleQuery");
+        this._telemetry.AssertRequestSuccessful("SampleQuery");
     }
 
     [Fact]
-    public async Task Send_Request_Throws_When_Handler_Fails()
+    public async Task Send_Query_Throws_When_Handler_Fails()
     {
-        var action = () => this._mediator.Send(new SampleRequest("world", IsSuccessful: false));
+        var action = () => this._mediator.SendAsync(new SampleQuery("world", IsSuccessful: false), CancellationToken.None);
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(action);
 
-        this._logs.AssertRequestFailed("Request SampleRequest");
-        this._activities.AssertRequestFailed("SampleRequest", exception);
-        this._telemetry.AssertRequestFailed("SampleRequest", exception);
+        this._logs.AssertRequestFailed("Request SampleQuery");
+        this._activities.AssertRequestFailed("SampleQuery", exception);
+        this._telemetry.AssertRequestFailed("SampleQuery", exception);
     }
 
     [Fact]
-    public async Task Send_Request_Throws_When_Request_Is_Invalid()
+    public async Task Send_Query_Throws_When_Query_Is_Invalid()
     {
-        var action = () => this._mediator.Send(new SampleRequest(RequiredValue: null!, IsSuccessful: true));
+        var action = () => this._mediator.SendAsync(new SampleQuery(RequiredValue: null!, IsSuccessful: true), CancellationToken.None);
         var exception = await Assert.ThrowsAsync<RequestValidationException>(action);
 
-        Assert.Equal(typeof(SampleRequest), exception.RequestType);
-        Assert.Equal("SampleRequest", exception.RequestName);
+        Assert.Equal(typeof(SampleQuery), exception.RequestType);
+        Assert.Equal("SampleQuery", exception.RequestName);
         Assert.Contains("RequiredValue", exception.Message);
 
-        this._logs.AssertRequestFailed("Request SampleRequest");
-        this._activities.AssertRequestFailed("SampleRequest", exception);
-        this._telemetry.AssertRequestFailed("SampleRequest", exception);
+        this._logs.AssertRequestFailed("Request SampleQuery");
+        this._activities.AssertRequestFailed("SampleQuery", exception);
+        this._telemetry.AssertRequestFailed("SampleQuery", exception);
     }
 
     [Fact]
-    public async Task Send_StreamRequest_Works_When_Handler_Is_Succesful()
+    public async Task Send_Command_Works_When_Handler_Is_Succesful()
     {
-        var items = await this._mediator.CreateStream(new SampleStreamRequest("world", IsSuccessful: true)).ToListAsync();
+        await this._mediator.SendAsync(new SampleCommand("world", IsSuccessful: true), CancellationToken.None);
+
+        this._logs.AssertRequestSuccessful("Request SampleCommand");
+        this._activities.AssertRequestSuccessful("SampleCommand");
+        this._telemetry.AssertRequestSuccessful("SampleCommand");
+    }
+
+    [Fact]
+    public async Task Send_Command_Throws_When_Handler_Fails()
+    {
+        var action = () => this._mediator.SendAsync(new SampleCommand("world", IsSuccessful: false), CancellationToken.None);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(action);
+
+        this._logs.AssertRequestFailed("Request SampleCommand");
+        this._activities.AssertRequestFailed("SampleCommand", exception);
+        this._telemetry.AssertRequestFailed("SampleCommand", exception);
+    }
+
+    [Fact]
+    public async Task Send_Command_Throws_When_Command_Is_Invalid()
+    {
+        var action = () => this._mediator.SendAsync(new SampleCommand(RequiredValue: null!, IsSuccessful: true), CancellationToken.None);
+        var exception = await Assert.ThrowsAsync<RequestValidationException>(action);
+
+        Assert.Equal(typeof(SampleCommand), exception.RequestType);
+        Assert.Equal("SampleCommand", exception.RequestName);
+        Assert.Contains("RequiredValue", exception.Message);
+
+        this._logs.AssertRequestFailed("Request SampleCommand");
+        this._activities.AssertRequestFailed("SampleCommand", exception);
+        this._telemetry.AssertRequestFailed("SampleCommand", exception);
+    }
+
+    [Fact]
+    public async Task Send_StreamQuery_Works_When_Handler_Is_Succesful()
+    {
+        var items = await this._mediator.CreateStream(new SampleStreamQuery("world", IsSuccessful: true), CancellationToken.None).ToListAsync();
 
         Assert.Equal(2, items.Count);
         Assert.Equal("Hello", items[0]);
         Assert.Equal("world!", items[1]);
 
-        this._logs.AssertRequestSuccessful("Stream request SampleStreamRequest");
-        this._activities.AssertRequestSuccessful("SampleStreamRequest");
-        this._telemetry.AssertRequestSuccessful("SampleStreamRequest");
+        this._logs.AssertRequestSuccessful("Stream request SampleStreamQuery");
+        this._activities.AssertRequestSuccessful("SampleStreamQuery");
+        this._telemetry.AssertRequestSuccessful("SampleStreamQuery");
     }
 
     [Fact]
-    public async Task Send_StreamRequest_Throws_When_Handler_Fails()
+    public async Task Send_StreamQuery_Throws_When_Handler_Fails()
     {
-        var action = () => this._mediator.CreateStream(new SampleStreamRequest("world", IsSuccessful: false)).ToListAsync();
+        var action = () => this._mediator.CreateStream(new SampleStreamQuery("world", IsSuccessful: false), CancellationToken.None).ToListAsync();
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(action);
 
-        this._logs.AssertRequestFailed("Stream request SampleStreamRequest");
-        this._activities.AssertRequestFailed("SampleStreamRequest", exception);
-        this._telemetry.AssertRequestFailed("SampleStreamRequest", exception);
+        this._logs.AssertRequestFailed("Stream request SampleStreamQuery");
+        this._activities.AssertRequestFailed("SampleStreamQuery", exception);
+        this._telemetry.AssertRequestFailed("SampleStreamQuery", exception);
     }
 
     [Fact]
-    public async Task Send_StreamRequest_Throws_When_StreamRequest_Is_Invalid()
+    public async Task Send_StreamQuery_Throws_When_StreamQuery_Is_Invalid()
     {
-        var action = () => this._mediator.CreateStream(new SampleStreamRequest(RequiredValue: null!, IsSuccessful: true)).ToListAsync();
+        var action = () => this._mediator.CreateStream(new SampleStreamQuery(RequiredValue: null!, IsSuccessful: true), CancellationToken.None).ToListAsync();
         var exception = await Assert.ThrowsAsync<RequestValidationException>(action);
 
-        Assert.Equal(typeof(SampleStreamRequest), exception.RequestType);
-        Assert.Equal("SampleStreamRequest", exception.RequestName);
+        Assert.Equal(typeof(SampleStreamQuery), exception.RequestType);
+        Assert.Equal("SampleStreamQuery", exception.RequestName);
         Assert.Contains("RequiredValue", exception.Message);
 
-        this._logs.AssertRequestFailed("Stream request SampleStreamRequest");
-        this._activities.AssertRequestFailed("SampleStreamRequest", exception);
-        this._telemetry.AssertRequestFailed("SampleStreamRequest", exception);
+        this._logs.AssertRequestFailed("Stream request SampleStreamQuery");
+        this._activities.AssertRequestFailed("SampleStreamQuery", exception);
+        this._telemetry.AssertRequestFailed("SampleStreamQuery", exception);
     }
 
     [Fact]
     public void Behaviors_Are_Registered_In_The_Right_Order()
     {
-        var reverseRequestBehaviors = this.Services.GetServices<IPipelineBehavior<SampleRequest, string>>().Reverse().ToArray();
-        var reverseStreamRequestBehaviors = this.Services.GetServices<IStreamPipelineBehavior<SampleStreamRequest, string>>().Reverse().ToArray();
+        var reverseRequestBehaviors = this.Services.GetServices<IPipelineBehavior<SampleQuery, string>>().Reverse().ToArray();
+        var reverseStreamRequestBehaviors = this.Services.GetServices<IStreamPipelineBehavior<SampleStreamQuery, string>>().Reverse().ToArray();
 
         var expectedRequestCustomBehaviorTypes = new HashSet<Type>
         {
-            typeof(RequestTracingBehavior<SampleRequest, string>),
-            typeof(RequestApplicationInsightsBehavior<SampleRequest, string>),
-            typeof(RequestLoggingBehavior<SampleRequest, string>),
-            typeof(RequestValidationBehavior<SampleRequest, string>),
+            typeof(RequestTracingBehavior<SampleQuery, string>),
+            typeof(RequestApplicationInsightsBehavior<SampleQuery, string>),
+            typeof(RequestLoggingBehavior<SampleQuery, string>),
+            typeof(RequestValidationBehavior<SampleQuery, string>),
         };
 
         var expectedCustomStreamRequestBehaviorTypes = new HashSet<Type>
         {
-            typeof(StreamRequestTracingBehavior<SampleStreamRequest, string>),
-            typeof(StreamRequestApplicationInsightsBehavior<SampleStreamRequest, string>),
-            typeof(StreamRequestLoggingBehavior<SampleStreamRequest, string>),
-            typeof(StreamRequestValidationBehavior<SampleStreamRequest, string>),
+            typeof(StreamRequestTracingBehavior<SampleStreamQuery, string>),
+            typeof(StreamRequestApplicationInsightsBehavior<SampleStreamQuery, string>),
+            typeof(StreamRequestLoggingBehavior<SampleStreamQuery, string>),
+            typeof(StreamRequestValidationBehavior<SampleStreamQuery, string>),
         };
 
         // OpenTelemetry and ApplicationInsights tracing basically do the same job
         // They must be registered before logging and validation behaviors in order to record logs and validation exceptions
-        Assert.IsType<RequestValidationBehavior<SampleRequest, string>>(reverseRequestBehaviors[0]);
-        Assert.IsType<RequestLoggingBehavior<SampleRequest, string>>(reverseRequestBehaviors[1]);
-        Assert.IsType<RequestApplicationInsightsBehavior<SampleRequest, string>>(reverseRequestBehaviors[2]);
-        Assert.IsType<RequestTracingBehavior<SampleRequest, string>>(reverseRequestBehaviors[3]);
+        Assert.IsType<RequestValidationBehavior<SampleQuery, string>>(reverseRequestBehaviors[0]);
+        Assert.IsType<RequestLoggingBehavior<SampleQuery, string>>(reverseRequestBehaviors[1]);
+        Assert.IsType<RequestApplicationInsightsBehavior<SampleQuery, string>>(reverseRequestBehaviors[2]);
+        Assert.IsType<RequestTracingBehavior<SampleQuery, string>>(reverseRequestBehaviors[3]);
 
         for (var i = 4; i < reverseRequestBehaviors.Length; i++)
         {
@@ -134,10 +170,10 @@ public sealed class MediatorTests : BaseUnitTest<MediatorFixture>
             Assert.DoesNotContain(reverseRequestBehaviors[i].GetType(), expectedRequestCustomBehaviorTypes);
         }
 
-        Assert.IsType<StreamRequestValidationBehavior<SampleStreamRequest, string>>(reverseStreamRequestBehaviors[0]);
-        Assert.IsType<StreamRequestLoggingBehavior<SampleStreamRequest, string>>(reverseStreamRequestBehaviors[1]);
-        Assert.IsType<StreamRequestApplicationInsightsBehavior<SampleStreamRequest, string>>(reverseStreamRequestBehaviors[2]);
-        Assert.IsType<StreamRequestTracingBehavior<SampleStreamRequest, string>>(reverseStreamRequestBehaviors[3]);
+        Assert.IsType<StreamRequestValidationBehavior<SampleStreamQuery, string>>(reverseStreamRequestBehaviors[0]);
+        Assert.IsType<StreamRequestLoggingBehavior<SampleStreamQuery, string>>(reverseStreamRequestBehaviors[1]);
+        Assert.IsType<StreamRequestApplicationInsightsBehavior<SampleStreamQuery, string>>(reverseStreamRequestBehaviors[2]);
+        Assert.IsType<StreamRequestTracingBehavior<SampleStreamQuery, string>>(reverseStreamRequestBehaviors[3]);
 
         for (var i = 4; i < reverseStreamRequestBehaviors.Length; i++)
         {

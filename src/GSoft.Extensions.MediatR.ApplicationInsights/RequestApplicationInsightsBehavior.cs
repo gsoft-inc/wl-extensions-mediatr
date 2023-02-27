@@ -1,11 +1,12 @@
-﻿using MediatR;
+﻿using System.Diagnostics;
+using MediatR;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 
 namespace GSoft.Extensions.MediatR;
 
 internal sealed class RequestApplicationInsightsBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     private readonly TelemetryClient _telemetryClient;
 
@@ -21,22 +22,38 @@ internal sealed class RequestApplicationInsightsBehavior<TRequest, TResponse> : 
 
     private async Task<TResponse> HandleWithTelemetry(TRequest request, RequestHandlerDelegate<TResponse> next)
     {
-        using (var operation = this._telemetryClient.StartOperation<DependencyTelemetry>(request.GetType().Name))
+        var operation = this._telemetryClient.StartOperation<DependencyTelemetry>(request.GetType().Name);
+
+        // Originating activity must be captured AFTER that the operation is created
+        // Because ApplicationInsights SDK creates another intermediate Activity
+        var originatingActivity = Activity.Current;
+
+        try
         {
             operation.Telemetry.Type = ApplicationInsightsConstants.TelemetryType;
+            var result = await next().ConfigureAwait(false);
+            operation.Telemetry.Success = true;
 
-            try
+            return result;
+        }
+        catch (Exception ex)
+        {
+            operation.Telemetry.Success = false;
+            operation.Telemetry.Properties.TryAdd(ApplicationInsightsConstants.Exception, ex.ToString());
+
+            throw;
+        }
+        finally
+        {
+            // The dependency telemetry is sent when the operation is disposed
+            if (originatingActivity == null)
             {
-                var result = await next().ConfigureAwait(false);
-                operation.Telemetry.Success = true;
-
-                return result;
+                operation.Dispose();
             }
-            catch (Exception ex)
+            else
             {
-                operation.Telemetry.Success = false;
-                operation.Telemetry.Properties.TryAdd(ApplicationInsightsConstants.Exception, ex.ToString());
-                throw;
+                // Attach the telemetry to the originating activity
+                originatingActivity.ExecuteAsCurrentActivity(operation, static x => x.Dispose());
             }
         }
     }
