@@ -72,31 +72,16 @@ public sealed class ParameterUsageAnalyzer : DiagnosticAnalyzer
             KnownSymbolNames.PublishMethod,
         };
 
-        private readonly HashSet<INamedTypeSymbol> _mediatorTypes;
+        private readonly ImmutableHashSet<INamedTypeSymbol> _mediatorTypes;
 
         public AnalyzerImplementation(Compilation compilation)
         {
-            this._mediatorTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.MediatorClass, KnownSymbolNames.MediatRAssembly) is { } mediatorType)
-            {
-                this._mediatorTypes.Add(mediatorType);
-            }
-
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.MediatorInterface, KnownSymbolNames.MediatRAssembly) is { } mediatorInterfaceType)
-            {
-                this._mediatorTypes.Add(mediatorInterfaceType);
-            }
-
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.SenderInterface, KnownSymbolNames.MediatRAssembly) is { } senderInterfaceType)
-            {
-                this._mediatorTypes.Add(senderInterfaceType);
-            }
-
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.PublisherInterface, KnownSymbolNames.MediatRAssembly) is { } publisherInterfaceType)
-            {
-                this._mediatorTypes.Add(publisherInterfaceType);
-            }
+            var mediatorTypesBuilder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+            mediatorTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.MediatorClass, KnownSymbolNames.MediatRAssembly));
+            mediatorTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.MediatorInterface, KnownSymbolNames.MediatRAssembly));
+            mediatorTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.SenderInterface, KnownSymbolNames.MediatRAssembly));
+            mediatorTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.PublisherInterface, KnownSymbolNames.MediatRAssembly));
+            this._mediatorTypes = mediatorTypesBuilder.ToImmutable();
         }
 
         public bool IsValid => this._mediatorTypes.Count == 4;

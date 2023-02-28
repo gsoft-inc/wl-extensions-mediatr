@@ -88,7 +88,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 
     private sealed class AnalyzerImplementation
     {
-        private readonly HashSet<INamedTypeSymbol> _requestHandlerTypes;
+        private readonly ImmutableHashSet<INamedTypeSymbol> _requestHandlerTypes;
 
         private readonly INamedTypeSymbol _baseRequestType;
         private readonly INamedTypeSymbol _notificationType;
@@ -98,23 +98,16 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 
         public AnalyzerImplementation(Compilation compilation)
         {
-            this._requestHandlerTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-
             this._baseRequestType = compilation.GetBestTypeByMetadataName(KnownSymbolNames.BaseRequestInterface, KnownSymbolNames.MediatRContractsAssembly)!;
             this._notificationType = compilation.GetBestTypeByMetadataName(KnownSymbolNames.NotificationInterface, KnownSymbolNames.MediatRContractsAssembly)!;
             this._notificationHandlerType = compilation.GetBestTypeByMetadataName(KnownSymbolNames.NotificationHandlerInterface, KnownSymbolNames.MediatRAssembly)!;
             this._streamRequestType = compilation.GetBestTypeByMetadataName(KnownSymbolNames.StreamRequestInterface, KnownSymbolNames.MediatRContractsAssembly)!;
             this._streamRequestHandlerType = compilation.GetBestTypeByMetadataName(KnownSymbolNames.StreamRequestHandlerInterface, KnownSymbolNames.MediatRAssembly)!;
 
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT1) is { } requestHandlerTypeT1)
-            {
-                this._requestHandlerTypes.Add(requestHandlerTypeT1);
-            }
-
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT2) is { } requestHandlerTypeT2)
-            {
-                this._requestHandlerTypes.Add(requestHandlerTypeT2);
-            }
+            var requestHandlerTypesBuilder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+            requestHandlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT1, KnownSymbolNames.MediatRAssembly));
+            requestHandlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT2, KnownSymbolNames.MediatRAssembly));
+            this._requestHandlerTypes = requestHandlerTypesBuilder.ToImmutable();
         }
 
         public bool IsValid =>

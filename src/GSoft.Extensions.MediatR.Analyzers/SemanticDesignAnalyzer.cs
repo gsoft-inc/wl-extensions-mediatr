@@ -50,41 +50,31 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
 
     private sealed class AnalyzerImplementation
     {
-        private readonly HashSet<INamedTypeSymbol> _mediatorTypesWithSendMethod;
-        private readonly HashSet<INamedTypeSymbol> _requestHandlerTypes;
+        private static readonly HashSet<string> MediatorSendAndSendAsyncMethodNames = new HashSet<string>(StringComparer.Ordinal)
+        {
+            KnownSymbolNames.SendMethod,
+            KnownSymbolNames.SendAsyncMethod,
+        };
+
+        private readonly ImmutableHashSet<INamedTypeSymbol> _mediatorTypesWithSendOrSendAsyncMethod;
+        private readonly ImmutableHashSet<INamedTypeSymbol> _requestHandlerTypes;
 
         public AnalyzerImplementation(Compilation compilation)
         {
-            this._mediatorTypesWithSendMethod = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-            this._requestHandlerTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+            var mediatorTypesWithSendOrSendAsyncMethodBuilder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+            mediatorTypesWithSendOrSendAsyncMethodBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.MediatorClass, KnownSymbolNames.MediatRAssembly));
+            mediatorTypesWithSendOrSendAsyncMethodBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.MediatorInterface, KnownSymbolNames.MediatRAssembly));
+            mediatorTypesWithSendOrSendAsyncMethodBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.SenderInterface, KnownSymbolNames.MediatRAssembly));
+            mediatorTypesWithSendOrSendAsyncMethodBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.GSoftMediatorExtensionsClass, KnownSymbolNames.GSoftExtMediatRAssembly));
+            this._mediatorTypesWithSendOrSendAsyncMethod = mediatorTypesWithSendOrSendAsyncMethodBuilder.ToImmutable();
 
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.MediatorClass, KnownSymbolNames.MediatRAssembly) is { } mediatorClassSymbol)
-            {
-                this._mediatorTypesWithSendMethod.Add(mediatorClassSymbol);
-            }
-
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.MediatorInterface, KnownSymbolNames.MediatRAssembly) is { } mediatorInterfaceSymbol)
-            {
-                this._mediatorTypesWithSendMethod.Add(mediatorInterfaceSymbol);
-            }
-
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.SenderInterface, KnownSymbolNames.MediatRAssembly) is { } senderInterfaceSymbol)
-            {
-                this._mediatorTypesWithSendMethod.Add(senderInterfaceSymbol);
-            }
-
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT1, KnownSymbolNames.MediatRAssembly) is { } requestHandlerTypeT1)
-            {
-                this._requestHandlerTypes.Add(requestHandlerTypeT1);
-            }
-
-            if (compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT2, KnownSymbolNames.MediatRAssembly) is { } requestHandlerTypeT2)
-            {
-                this._requestHandlerTypes.Add(requestHandlerTypeT2);
-            }
+            var requestHandlerTypesBuilder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+            requestHandlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT1, KnownSymbolNames.MediatRAssembly));
+            requestHandlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT2, KnownSymbolNames.MediatRAssembly));
+            this._requestHandlerTypes = requestHandlerTypesBuilder.ToImmutable();
         }
 
-        public bool IsValid => this._mediatorTypesWithSendMethod.Count == 3 && this._requestHandlerTypes.Count == 2;
+        public bool IsValid => this._mediatorTypesWithSendOrSendAsyncMethod.Count == 4 && this._requestHandlerTypes.Count == 2;
 
         public void OnBlockStartAction(OperationBlockStartAnalysisContext context)
         {
@@ -117,15 +107,15 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
 
         private void AnalyzeOperationInvocation(OperationAnalysisContext context)
         {
-            if (context.Operation is IInvocationOperation operation && this.IsMediatorSendMethod(operation))
+            if (context.Operation is IInvocationOperation operation && this.IsMediatorSendMethodOrSendAsyncExtensionMethod(operation))
             {
                 context.ReportDiagnostic(HandlersShouldNotCallHandlerRule, operation);
             }
         }
 
-        private bool IsMediatorSendMethod(IInvocationOperation operation)
+        private bool IsMediatorSendMethodOrSendAsyncExtensionMethod(IInvocationOperation operation)
         {
-            return this._mediatorTypesWithSendMethod.Contains(operation.TargetMethod.ContainingType) && operation.TargetMethod is { Name: KnownSymbolNames.SendMethod };
+            return this._mediatorTypesWithSendOrSendAsyncMethod.Contains(operation.TargetMethod.ContainingType) && MediatorSendAndSendAsyncMethodNames.Contains(operation.TargetMethod.Name);
         }
     }
 }
