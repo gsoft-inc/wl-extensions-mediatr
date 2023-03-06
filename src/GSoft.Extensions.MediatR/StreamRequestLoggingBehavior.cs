@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -23,7 +23,7 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
         var requestName = request.GetType().Name;
 
         this._logger.StreamRequestStarted(requestName);
-        var watch = Stopwatch.StartNew();
+        var watch = ValueStopwatch.StartNew();
 
         IAsyncEnumerator<TResponse> resultsEnumerator;
 
@@ -33,16 +33,14 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
         }
         catch (Exception ex)
         {
-            watch.Stop();
-
             if (originatingActivity == null)
             {
-                this._logger.StreamRequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
+                this._logger.StreamRequestFailed(ex, requestName, watch.GetElapsedTime().TotalSeconds);
             }
             else
             {
                 // Make sure the logs being sent are attached to the originating activity
-                originatingActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
+                originatingActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.GetElapsedTime().TotalSeconds, ex), static x =>
                 {
                     x.Logger.StreamRequestFailed(x.Exception, x.RequestName, x.Elapsed);
                 });
@@ -63,16 +61,14 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
                 }
                 catch (Exception ex)
                 {
-                    watch.Stop();
-
                     if (originatingActivity == null)
                     {
-                        this._logger.StreamRequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
+                        this._logger.StreamRequestFailed(ex, requestName, watch.GetElapsedTime().TotalSeconds);
                     }
                     else
                     {
                         // Make sure the logs being sent are attached to the originating activity
-                        originatingActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
+                        originatingActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.GetElapsedTime().TotalSeconds, ex), static x =>
                         {
                             x.Logger.StreamRequestFailed(x.Exception, x.RequestName, x.Elapsed);
                         });
@@ -88,16 +84,14 @@ internal sealed class StreamRequestLoggingBehavior<TRequest, TResponse> : IStrea
             }
         }
 
-        watch.Stop();
-
         if (originatingActivity == null)
         {
-            this._logger.StreamRequestSucceeded(requestName, watch.Elapsed.TotalSeconds);
+            this._logger.StreamRequestSucceeded(requestName, watch.GetElapsedTime().TotalSeconds);
         }
         else
         {
             // Make sure the logs being sent are attached to the originating activity
-            originatingActivity.ExecuteAsCurrentActivity(new SuccessfulLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds), static x =>
+            originatingActivity.ExecuteAsCurrentActivity(new SuccessfulLoggerState(this._logger, requestName, watch.GetElapsedTime().TotalSeconds), static x =>
             {
                 x.Logger.StreamRequestSucceeded(x.RequestName, x.Elapsed);
             });

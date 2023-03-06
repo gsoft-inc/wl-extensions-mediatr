@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -22,22 +22,20 @@ internal sealed class RequestLoggingBehavior<TRequest, TResponse> : IPipelineBeh
         var requestName = request.GetType().Name;
 
         this._logger.RequestStarted(requestName);
-        var watch = Stopwatch.StartNew();
+        var watch = ValueStopwatch.StartNew();
 
         try
         {
             var response = await next().ConfigureAwait(false);
 
-            watch.Stop();
-
             if (originatingActivity == null)
             {
-                this._logger.RequestSucceeded(requestName, watch.Elapsed.TotalSeconds);
+                this._logger.RequestSucceeded(requestName, watch.GetElapsedTime().TotalSeconds);
             }
             else
             {
                 // Make sure the logs being sent are attached to the originating activity
-                originatingActivity.ExecuteAsCurrentActivity(new SuccessfulLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds), static x =>
+                originatingActivity.ExecuteAsCurrentActivity(new SuccessfulLoggerState(this._logger, requestName, watch.GetElapsedTime().TotalSeconds), static x =>
                 {
                     x.Logger.RequestSucceeded(x.RequestName, x.Elapsed);
                 });
@@ -47,16 +45,14 @@ internal sealed class RequestLoggingBehavior<TRequest, TResponse> : IPipelineBeh
         }
         catch (Exception ex)
         {
-            watch.Stop();
-
             if (originatingActivity == null)
             {
-                this._logger.RequestFailed(ex, requestName, watch.Elapsed.TotalSeconds);
+                this._logger.RequestFailed(ex, requestName, watch.GetElapsedTime().TotalSeconds);
             }
             else
             {
                 // Make sure the logs being sent are attached to the originating activity
-                originatingActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.Elapsed.TotalSeconds, ex), static x =>
+                originatingActivity.ExecuteAsCurrentActivity(new FailedLoggerState(this._logger, requestName, watch.GetElapsedTime().TotalSeconds, ex), static x =>
                 {
                     x.Logger.RequestFailed(x.Exception, x.RequestName, x.Elapsed);
                 });
