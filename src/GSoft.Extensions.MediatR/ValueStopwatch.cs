@@ -6,7 +6,7 @@ namespace GSoft.Extensions.MediatR;
 /// Stopwatch implementation that's allocation free and better to profile/time large quantity of code
 /// </summary>
 /// <seealso cref="https://github.com/dotnet/aspnetcore/blob/v7.0.0/src/Shared/ValueStopwatch/ValueStopwatch.cs"/>
-internal struct ValueStopwatch
+internal readonly struct ValueStopwatch
 {
     private static readonly double TimestampToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
 
