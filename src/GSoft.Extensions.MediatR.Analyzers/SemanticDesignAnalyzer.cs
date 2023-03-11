@@ -57,7 +57,8 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
         };
 
         private readonly ImmutableHashSet<INamedTypeSymbol> _mediatorTypesWithSendOrSendAsyncMethod;
-        private readonly ImmutableHashSet<INamedTypeSymbol> _requestHandlerTypes;
+        private readonly ImmutableHashSet<INamedTypeSymbol> _handlerTypes;
+        private readonly INamedTypeSymbol _genericRequestType;
 
         public AnalyzerImplementation(Compilation compilation)
         {
@@ -68,17 +69,20 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
             mediatorTypesWithSendOrSendAsyncMethodBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.GSoftMediatorExtensionsClass, KnownSymbolNames.GSoftExtMediatRAssembly));
             this._mediatorTypesWithSendOrSendAsyncMethod = mediatorTypesWithSendOrSendAsyncMethodBuilder.ToImmutable();
 
-            var requestHandlerTypesBuilder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-            requestHandlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT1, KnownSymbolNames.MediatRAssembly));
-            requestHandlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT2, KnownSymbolNames.MediatRAssembly));
-            this._requestHandlerTypes = requestHandlerTypesBuilder.ToImmutable();
+            var handlerTypesBuilder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+            handlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT1, KnownSymbolNames.MediatRAssembly));
+            handlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT2, KnownSymbolNames.MediatRAssembly));
+            handlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.NotificationHandlerInterface, KnownSymbolNames.MediatRAssembly));
+            this._handlerTypes = handlerTypesBuilder.ToImmutable();
+
+            this._genericRequestType = compilation.GetBestTypeByMetadataName(KnownSymbolNames.GenericRequestInterface, KnownSymbolNames.MediatRContractsAssembly)!;
         }
 
-        public bool IsValid => this._mediatorTypesWithSendOrSendAsyncMethod.Count == 4 && this._requestHandlerTypes.Count == 2;
+        public bool IsValid => this._mediatorTypesWithSendOrSendAsyncMethod.Count == 4 && this._handlerTypes.Count == 3 && this._genericRequestType != null;
 
         public void OnBlockStartAction(OperationBlockStartAnalysisContext context)
         {
-            if (context.OwningSymbol is IMethodSymbol method && this.ImplementsRequestHandlerInterface(method.ContainingType))
+            if (context.OwningSymbol is IMethodSymbol method && this.ImplementsHandlerInterface(method.ContainingType))
             {
                 context.RegisterOperationAction(this.AnalyzeOperationInvocation, OperationKind.Invocation);
             }
@@ -88,34 +92,72 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
         {
             if (context.Symbol is INamedTypeSymbol { TypeKind: TypeKind.Class or TypeKind.Struct, IsAbstract: false } type)
             {
-                if (this.ImplementsRequestHandlerInterface(type) && type.DeclaredAccessibility == Accessibility.Public)
+                if (this.ImplementsHandlerInterface(type) && type.DeclaredAccessibility == Accessibility.Public)
                 {
                     context.ReportDiagnostic(HandlersShouldNotBePublicRule, type);
                 }
             }
         }
 
-        private bool ImplementsRequestHandlerInterface(ITypeSymbol type)
+        private bool ImplementsHandlerInterface(ITypeSymbol type)
         {
-            return type.AllInterfaces.Any(this.IsRequestHandler);
+            return type.AllInterfaces.Any(this.IsHandler);
         }
 
-        private bool IsRequestHandler(INamedTypeSymbol symbol)
+        private bool IsHandler(INamedTypeSymbol symbol)
         {
-            return symbol is { IsGenericType: true, Arity: 1 or 2 } && this._requestHandlerTypes.Contains(symbol.ConstructedFrom);
+            return symbol is { IsGenericType: true, Arity: 1 or 2 } && this._handlerTypes.Contains(symbol.ConstructedFrom);
         }
 
         private void AnalyzeOperationInvocation(OperationAnalysisContext context)
         {
             if (context.Operation is IInvocationOperation operation && this.IsMediatorSendMethodOrSendAsyncExtensionMethod(operation))
             {
-                context.ReportDiagnostic(HandlersShouldNotCallHandlerRule, operation);
+                if (ContainingTypeNameEndsWithCommandHandler(context) && this.IsHandlingQueryArgument(operation))
+                {
+                    // This is fine, command handlers are allowed to consume query handlers
+                }
+                else
+                {
+                    context.ReportDiagnostic(HandlersShouldNotCallHandlerRule, operation);
+                }
             }
         }
 
         private bool IsMediatorSendMethodOrSendAsyncExtensionMethod(IInvocationOperation operation)
         {
-            return this._mediatorTypesWithSendOrSendAsyncMethod.Contains(operation.TargetMethod.ContainingType) && MediatorSendAndSendAsyncMethodNames.Contains(operation.TargetMethod.Name);
+            // Detect Send(TRequest, CancellationToken) or SendAsync(ISender, TRequest, CancellationToken)
+            return operation.Arguments.Length >= 2
+                && this._mediatorTypesWithSendOrSendAsyncMethod.Contains(operation.TargetMethod.ContainingType)
+                && MediatorSendAndSendAsyncMethodNames.Contains(operation.TargetMethod.Name);
+        }
+
+        private static bool ContainingTypeNameEndsWithCommandHandler(OperationAnalysisContext context)
+        {
+            return context.ContainingSymbol.ContainingType.Name.EndsWith("CommandHandler", StringComparison.Ordinal);
+        }
+
+        private bool IsHandlingQueryArgument(IInvocationOperation operation)
+        {
+            // When using built-in "Send" method, the first argument is the request
+            // When using our "SendAsync" extension method, the first argument is a ISender and the second argument is the request
+            var argument = operation.TargetMethod.Name == KnownSymbolNames.SendMethod ? operation.Arguments[0] : operation.Arguments[1];
+            if (argument.Value.Type is not INamedTypeSymbol argumentType)
+            {
+                return false;
+            }
+
+            return this.IsGenericRequestInterface(argumentType) || this.ImplementsGenericRequestInterface(argumentType);
+        }
+
+        private bool ImplementsGenericRequestInterface(ITypeSymbol type)
+        {
+            return type.AllInterfaces.Any(this.IsGenericRequestInterface);
+        }
+
+        private bool IsGenericRequestInterface(INamedTypeSymbol type)
+        {
+            return type is { IsGenericType: true, Arity: 1 } && SymbolEqualityComparer.Default.Equals(type.ConstructedFrom, this._genericRequestType);
         }
     }
 }
