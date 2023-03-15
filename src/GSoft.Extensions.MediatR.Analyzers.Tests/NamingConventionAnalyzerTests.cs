@@ -1,61 +1,67 @@
 ﻿namespace GSoft.Extensions.MediatR.Analyzers.Tests;
 
-public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTests<NamingConventionAnalyzer>
+public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTest<NamingConventionAnalyzer>
 {
     [Fact]
     public async Task Request_Ending_With_Command_Returns_No_Diagnostic()
     {
         const string source = "public class MyCommand : IRequest { }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
     public async Task Request_Ending_With_Query_Returns_No_Diagnostic()
     {
         const string source = "public class MyQuery : IRequest<string> { }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
     public async Task StreamRequest_Ending_With_StreamQuery_Returns_No_Diagnostic()
     {
         const string source = "public class MyStreamQuery : IStreamRequest<string> { }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
     public async Task Notification_Ending_With_Notification_Returns_No_Diagnostic()
     {
         const string source = "public class MyNotification : INotification { }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
     public async Task Notification_Ending_With_Event_Returns_No_Diagnostic()
     {
         const string source = "public class MyEvent : INotification { }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
     public async Task Request_Not_Ending_With_Command_Or_Query_Returns_One_Diagnostic()
     {
         const string source = "public class MyClass : IRequest<string> { }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithDiagnostic(NamingConventionAnalyzer.UseCommandOrQuerySuffixRule);
+        await this.WithSourceCode(source)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseCommandOrQuerySuffixRule, startLine: 1, startColumn: 14, endLine: 1, endColumn: 21)
+            .RunAsync();
     }
 
     [Fact]
     public async Task StreamRequest_Not_Ending_With_StreamQuery_Returns_One_Diagnostic()
     {
         const string source = "public class MyClass : IStreamRequest<string> { }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithDiagnostic(NamingConventionAnalyzer.UseStreamQuerySuffixRule);
+        await this.WithSourceCode(source)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseStreamQuerySuffixRule, startLine: 1, startColumn: 14, endLine: 1, endColumn: 21)
+            .RunAsync();
     }
 
     [Fact]
     public async Task Notification_Not_Ending_With_Notification_Or_Event_Returns_One_Diagnostic()
     {
         const string source = "public class MyClass : INotification { }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithDiagnostic(NamingConventionAnalyzer.UseNotificationOrEventSuffixRule);
+        await this.WithSourceCode(source)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseNotificationOrEventSuffixRule, startLine: 1, startColumn: 14, endLine: 1, endColumn: 21)
+            .RunAsync();
     }
 
     [Fact]
@@ -68,7 +74,7 @@ internal class MyCommandHandler : IRequestHandler<MyCommand>
 {
     public Task Handle(MyCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
@@ -81,7 +87,7 @@ internal class MyQueryHandler : IRequestHandler<MyQuery, string>
 {
     public Task<string> Handle(MyQuery query, CancellationToken cancellationToken) => Task.FromResult(string.Empty);
 }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
@@ -97,7 +103,7 @@ internal class MyStreamQueryHandler : IStreamRequestHandler<MyStreamQuery, strin
         yield break;
     }
 }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
@@ -110,7 +116,7 @@ internal class MyNotificationHandler : INotificationHandler<MyNotification>
 {
     public Task Handle(MyNotification notification, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
@@ -123,7 +129,7 @@ internal class MyEventHandler : INotificationHandler<MyEvent>
 {
     public Task Handle(MyEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithoutDiagnostics();
+        await this.WithSourceCode(source).RunAsync();
     }
 
     [Fact]
@@ -136,7 +142,9 @@ internal class MyRequestHandler : IRequestHandler<MyCommand>
 {
     public Task Handle(MyCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithDiagnostic(NamingConventionAnalyzer.UseCommandHandlerOrQueryHandlerSuffixRule);
+        await this.WithSourceCode(source)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseCommandHandlerOrQueryHandlerSuffixRule, startLine: 4, startColumn: 16, endLine: 4, endColumn: 32)
+            .RunAsync();
     }
 
     [Fact]
@@ -152,7 +160,9 @@ internal class MyStreamRequestHandler : IStreamRequestHandler<MyStreamQuery, str
         yield break;
     }
 }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithDiagnostic(NamingConventionAnalyzer.UseStreamQueryHandlerSuffixRule);
+        await this.WithSourceCode(source)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseStreamQueryHandlerSuffixRule, startLine: 4, startColumn: 16, endLine: 4, endColumn: 38)
+            .RunAsync();
     }
 
     [Fact]
@@ -165,6 +175,8 @@ internal class SomethingHandler : INotificationHandler<MyNotification>
 {
     public Task Handle(MyNotification notification, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithDiagnostic(NamingConventionAnalyzer.UseNotificationHandlerOrEventHandlerSuffixRule);
+        await this.WithSourceCode(source)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseNotificationHandlerOrEventHandlerSuffixRule, startLine: 4, startColumn: 16, endLine: 4, endColumn: 32)
+            .RunAsync();
     }
 }

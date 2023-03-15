@@ -1,6 +1,6 @@
 ﻿namespace GSoft.Extensions.MediatR.Analyzers.Tests;
 
-public sealed class ServiceRegistrationAnalyzerTests : BaseAnalyzerTests<ServiceRegistrationAnalyzer>
+public sealed class ServiceRegistrationAnalyzerTests : BaseAnalyzerTest<ServiceRegistrationAnalyzer>
 {
     [Fact]
     public async Task Forbidden_AddMediatR_Method_Returns_One_Diagnostic()
@@ -13,6 +13,8 @@ public class MyRegistrations
         services.AddMediatR(x => x.RegisterServicesFromAssembly(typeof(MyRegistrations).Assembly));
     }
 }";
-        await this.Builder.WithSourceCode(source).ShouldCompileWithDiagnostic(ServiceRegistrationAnalyzer.UseAddMediatorExtensionMethodRule);
+        await this.WithSourceCode(source)
+            .WithExpectedDiagnostic(ServiceRegistrationAnalyzer.UseAddMediatorExtensionMethodRule, startLine: 6, startColumn: 18, endLine: 6, endColumn: 28)
+            .RunAsync();
     }
 }

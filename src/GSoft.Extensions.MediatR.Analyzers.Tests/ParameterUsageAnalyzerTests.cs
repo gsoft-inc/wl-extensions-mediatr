@@ -2,7 +2,7 @@
 
 namespace GSoft.Extensions.MediatR.Analyzers.Tests;
 
-public sealed class ParameterUsageAnalyzerTests : BaseAnalyzerTests<ParameterUsageAnalyzer>
+public sealed class ParameterUsageAnalyzerTests : BaseAnalyzerTest<ParameterUsageAnalyzer>
 {
     private const string ProgramSourceCodeFormat = @"
 public class MyQuery : IRequest<string> {{ }}
@@ -15,12 +15,10 @@ public class MyWorker
 {{
     public void DoSomething()
     {{
-        {0}
+        var mediator = ({0})null!;
+        {1}
     }}
 }}";
-
-    private const string ProgramSourceCodeFormatWithoutAsyncMethodRule =
-        "#pragma warning disable GMDTR12: this warning is tested in isolation\r\n" + ProgramSourceCodeFormat;
 
     [Theory]
     [InlineData(nameof(Mediator))]
@@ -28,9 +26,10 @@ public class MyWorker
     [InlineData(nameof(ISender))]
     public async Task Generic_Send_Method_With_Explicit_CancellationToken_Returns_No_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).Send(new MyQuery(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormatWithoutAsyncMethodRule, source))
-            .ShouldCompileWithoutDiagnostics();
+        const string source = "_ = mediator.Send(new MyQuery(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithDisabledDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule)
+            .RunAsync();
     }
 
     [Theory]
@@ -39,9 +38,10 @@ public class MyWorker
     [InlineData(nameof(ISender))]
     public async Task Generic_CreateStream_Method_With_Explicit_CancellationToken_Returns_No_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).CreateStream(new MyStreamQuery(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormatWithoutAsyncMethodRule, source))
-            .ShouldCompileWithoutDiagnostics();
+        const string source = "_ = mediator.CreateStream(new MyStreamQuery(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithDisabledDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule)
+            .RunAsync();
     }
 
     [Theory]
@@ -50,9 +50,10 @@ public class MyWorker
     [InlineData(nameof(IPublisher))]
     public async Task Generic_Publish_Method_With_Explicit_CancellationToken_Returns_No_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).Publish(new MyNotification(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormatWithoutAsyncMethodRule, source))
-            .ShouldCompileWithoutDiagnostics();
+        const string source = "_ = mediator.Publish(new MyNotification(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithDisabledDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule)
+            .RunAsync();
     }
 
     [Theory]
@@ -61,9 +62,11 @@ public class MyWorker
     [InlineData(nameof(ISender))]
     public async Task Non_Generic_Send_Method_With_Explicit_CancellationToken_Returns_One_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).Send((object)new MyQuery(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormatWithoutAsyncMethodRule, source))
-            .ShouldCompileWithDiagnostic(ParameterUsageAnalyzer.UseGenericParameterRule);
+        const string source = "_ = mediator.Send((object)new MyQuery(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithDisabledDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule)
+            .WithExpectedDiagnostic(ParameterUsageAnalyzer.UseGenericParameterRule, startLine: 13, startColumn: 22, endLine: 13, endColumn: 26)
+            .RunAsync();
     }
 
     [Theory]
@@ -72,9 +75,10 @@ public class MyWorker
     [InlineData(nameof(ISender))]
     public async Task Non_Generic_CreateStream_Method_With_Explicit_CancellationToken_Returns_One_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).CreateStream((object)new MyStreamQuery(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormatWithoutAsyncMethodRule, source))
-            .ShouldCompileWithDiagnostic(ParameterUsageAnalyzer.UseGenericParameterRule);
+        const string source = "_ = mediator.CreateStream((object)new MyStreamQuery(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithExpectedDiagnostic(ParameterUsageAnalyzer.UseGenericParameterRule, startLine: 13, startColumn: 22, endLine: 13, endColumn: 34)
+            .RunAsync();
     }
 
     [Theory]
@@ -83,9 +87,11 @@ public class MyWorker
     [InlineData(nameof(IPublisher))]
     public async Task Non_Generic_Publish_Method_With_Explicit_CancellationToken_Returns_One_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).Publish((object)new MyNotification(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormatWithoutAsyncMethodRule, source))
-            .ShouldCompileWithDiagnostic(ParameterUsageAnalyzer.UseGenericParameterRule);
+        const string source = "_ = mediator.Publish((object)new MyNotification(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithDisabledDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule)
+            .WithExpectedDiagnostic(ParameterUsageAnalyzer.UseGenericParameterRule, startLine: 13, startColumn: 22, endLine: 13, endColumn: 29)
+            .RunAsync();
     }
 
     [Theory]
@@ -94,9 +100,11 @@ public class MyWorker
     [InlineData(nameof(ISender))]
     public async Task Generic_Send_Method_With_Default_CancellationToken_Returns_One_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).Send(new MyQuery());";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormatWithoutAsyncMethodRule, source))
-            .ShouldCompileWithDiagnostic(ParameterUsageAnalyzer.ProvideCancellationTokenRule);
+        const string source = "_ = mediator.Send(new MyQuery());";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithDisabledDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule)
+            .WithExpectedDiagnostic(ParameterUsageAnalyzer.ProvideCancellationTokenRule, startLine: 13, startColumn: 22, endLine: 13, endColumn: 26)
+            .RunAsync();
     }
 
     [Theory]
@@ -105,9 +113,10 @@ public class MyWorker
     [InlineData(nameof(ISender))]
     public async Task Generic_CreateStream_Method_With_Default_CancellationToken_Returns_One_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).CreateStream(new MyStreamQuery());";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormatWithoutAsyncMethodRule, source))
-            .ShouldCompileWithDiagnostic(ParameterUsageAnalyzer.ProvideCancellationTokenRule);
+        const string source = "_ = mediator.CreateStream(new MyStreamQuery());";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithExpectedDiagnostic(ParameterUsageAnalyzer.ProvideCancellationTokenRule, startLine: 13, startColumn: 22, endLine: 13, endColumn: 34)
+            .RunAsync();
     }
 
     [Theory]
@@ -116,9 +125,11 @@ public class MyWorker
     [InlineData(nameof(IPublisher))]
     public async Task Generic_Publish_Method_With_Default_CancellationToken_Returns_One_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).Publish(new MyNotification());";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormatWithoutAsyncMethodRule, source))
-            .ShouldCompileWithDiagnostic(ParameterUsageAnalyzer.ProvideCancellationTokenRule);
+        const string source = "_ = mediator.Publish(new MyNotification());";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithDisabledDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule)
+            .WithExpectedDiagnostic(ParameterUsageAnalyzer.ProvideCancellationTokenRule, startLine: 13, startColumn: 22, endLine: 13, endColumn: 29)
+            .RunAsync();
     }
 
     [Theory]
@@ -127,8 +138,8 @@ public class MyWorker
     [InlineData(nameof(ISender))]
     public async Task SendAsync_Method_Returns_No_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).SendAsync(new MyQuery(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormat, source)).ShouldCompileWithoutDiagnostics();
+        const string source = "_ = mediator.SendAsync(new MyQuery(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source)).RunAsync();
     }
 
     [Theory]
@@ -137,9 +148,8 @@ public class MyWorker
     [InlineData(nameof(IPublisher))]
     public async Task PublishAsync_Method_Returns_No_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).PublishAsync(new MyNotification(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormat, source))
-            .ShouldCompileWithoutDiagnostics();
+        const string source = "_ = mediator.PublishAsync(new MyNotification(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source)).RunAsync();
     }
 
     [Theory]
@@ -148,9 +158,10 @@ public class MyWorker
     [InlineData(nameof(ISender))]
     public async Task Send_Without_Async_Extension_Method_Returns_One_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).Send(new MyQuery(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormat, source))
-            .ShouldCompileWithDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule);
+        const string source = "_ = mediator.Send(new MyQuery(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithExpectedDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule, startLine: 13, startColumn: 22, endLine: 13, endColumn: 26)
+            .RunAsync();
     }
 
     [Theory]
@@ -159,8 +170,9 @@ public class MyWorker
     [InlineData(nameof(IPublisher))]
     public async Task Publish_Without_Async_Extension_Method_Returns_One_Diagnostic(string methodContainingType)
     {
-        var source = $"_ = (({methodContainingType})null!).Publish(new MyNotification(), CancellationToken.None);";
-        await this.Builder.WithSourceCode(string.Format(ProgramSourceCodeFormat, source))
-            .ShouldCompileWithDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule);
+        const string source = "_ = mediator.Publish(new MyNotification(), CancellationToken.None);";
+        await this.WithSourceCode(string.Format(ProgramSourceCodeFormat, methodContainingType, source))
+            .WithExpectedDiagnostic(ParameterUsageAnalyzer.UseMethodEndingWithAsyncRule, startLine: 13, startColumn: 22, endLine: 13, endColumn: 29)
+            .RunAsync();
     }
 }
