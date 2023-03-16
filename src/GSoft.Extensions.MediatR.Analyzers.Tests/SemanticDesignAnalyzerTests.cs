@@ -3,7 +3,7 @@
 public sealed class SemanticDesignAnalyzerTests : BaseAnalyzerTest<SemanticDesignAnalyzer>
 {
     [Fact]
-    public async Task Query_Handlers_Cant_Call_Query_Or_Command_Handlers()
+    public async Task Query_Handlers_Cant_Send_Query_Or_Command()
     {
         const string source = @"
 public class MyQuery : IRequest<string> { }
@@ -34,7 +34,7 @@ internal class MyQueryHandler : IRequestHandler<MyQuery, string>
     }
 
     [Fact]
-    public async Task Command_Handlers_Can_Call_Query_Handler_But_Not_Command_Handlers()
+    public async Task Command_Handlers_Can_Send_Query_But_Not_Command()
     {
         const string source = @"
 public class MyCommand : IRequest { }
