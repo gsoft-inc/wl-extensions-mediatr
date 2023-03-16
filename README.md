@@ -3,13 +3,13 @@
 [![nuget](https://img.shields.io/nuget/v/GSoft.Extensions.MediatR.svg?logo=nuget)](https://www.nuget.org/packages/GSoft.Extensions.MediatR/)
 [![build](https://img.shields.io/github/actions/workflow/status/gsoft-inc/gsoft-extensions-mediatr/publish.yml?logo=github&branch=main)](https://github.com/gsoft-inc/gsoft-extensions-mediatr/actions/workflows/publish.yml)
 
-This library ensures that [MediatR](https://github.com/jbogard/MediatR) is registered in the dependency injection container **as a singleton** and also adds several behaviors:
+This library ensures that [MediatR](https://github.com/jbogard/MediatR) is registered in the dependency injection container **as a singleton** and also adds several features:
 
 * [Activity-based OpenTelemetry](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs) instrumentation
 * [High-performance logging](https://learn.microsoft.com/en-us/dotnet/core/extensions/logger-message-generator) with `Debug` log level
 * Data annotations support for request validation, similar to [ASP.NET Core model validation](https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation)
 * [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) instrumentation (in a [separate NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/))
-* [CQRS](https://microservices.io/patterns/data/cqrs.html) conventions and MediatR best practices with Roslyn analyers 
+* [CQRS](https://microservices.io/patterns/data/cqrs.html) conventions and MediatR best practices with Roslyn analyzers
 
 
 ## Getting started

@@ -12,6 +12,7 @@ internal static class KnownSymbolNames
     public const string GSoftMediatorExtensionsClass = "MediatR.MediatorExtensions";
 
     public const string BaseRequestInterface = "MediatR.IBaseRequest";
+    public const string GenericRequestInterface = "MediatR.IRequest`1";
     public const string RequestHandlerInterfaceT1 = "MediatR.IRequestHandler`1";
     public const string RequestHandlerInterfaceT2 = "MediatR.IRequestHandler`2";
 
