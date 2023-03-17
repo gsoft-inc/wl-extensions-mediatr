@@ -17,7 +17,7 @@ This library ensures that [MediatR](https://github.com/jbogard/MediatR) is regis
 Use the `AddMediator(params Assembly[] assemblies)` extension method on your dependency injection services (`IServiceCollection`) to automatically register all the MediatR request handlers from a given assembly.
 
 ```csharp
-builder.Services.AddMediator(typeof(Program).Assembly);
+builder.Services.AddMediator(typeof(Program).Assembly /*, [more assemblies...] */);
 ```
 
 If you use [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) and want to instrument your handlers, you can install the dedicated [NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/):
@@ -26,25 +26,39 @@ If you use [Application Insights](https://learn.microsoft.com/en-us/azure/azure-
 builder.Services.AddMediator(typeof(Program).Assembly).AddApplicationInsights();
 ```
 
-**Example**
+There are multiple method overloads of `AddMediator`. For instance, you can override MediatR configuration using this overload that accepts a `Action<MediatRServiceConfiguration>`:
 
 ```csharp
-public sealed record SayHelloRequest([property: Required] string To) : IRequest<string>;
+builder.Services.AddMediator(
+    cfg => cfg.NotificationPublisher = new TaskWhenAllPublisher(),
+    typeof(Program).Assembly);
+```
 
-public sealed class SayHelloRequestHandler : IRequestHandler<SayHelloRequest, string>
+
+## Example
+
+```csharp
+// CQRS naming conventions are suggested by a Roslyn analyzer, but it can be disabled
+public sealed record SayHelloCommand([property: Required] string To) : IRequest;
+
+public sealed class SayHelloCommandHandler : IRequestHandler<SayHelloCommand>
 {
-    public Task<string> Handle(SayHelloRequest request, CancellationToken cancellationToken)
+    public Task Handle(SayHelloCommand command, CancellationToken cancellationToken)
     {
-        return Task.FromResult($"Hello {request.To}!");
+        Console.WriteLine($"Hello {command.To}!");
+        return Task.CompletedTask;
     }
 }
 
-// [...]
+// [...] Retrieve an instance of IMediator or ISender
 var mediator = serviceProvider.GetRequiredService<IMediator>();
-var result = await mediator.Send(new SayHelloRequest("world"));
 
-// This throws RequestValidationException because SayHelloRequest.To is marked as required
-await mediator.Send(new SayHelloRequest(null));
+// - We use the preferred Async-suffixed extension method to put emphasis on the asynchronous aspect of MediatR
+// - A Roslyn analyzer suggests to specify a cancellation token, which is most of the time forgotten by developers
+await mediator.SendAsync(new SayHelloCommand("world"), CancellationToken.None);
+
+// This throws RequestValidationException because 'SayHelloCommand.To' is marked as required
+await mediator.SendAsync(new SayHelloCommand(null!), CancellationToken.None);
 ```
 
 
