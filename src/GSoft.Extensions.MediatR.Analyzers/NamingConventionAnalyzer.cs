@@ -170,7 +170,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 
             if (IsNestedClass(type))
             {
-                if (!type.Name.EndsWith("Handler"))
+                if (!type.Name.EndsWith("Handler", StringComparison.Ordinal))
                 {
                     context.ReportDiagnostic(UseHandlerSuffixRule, type);
                 }
@@ -232,7 +232,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 
             if (IsNestedClass(type))
             {
-                if (!type.Name.EndsWith("Handler"))
+                if (!type.Name.EndsWith("Handler", StringComparison.Ordinal))
                 {
                     context.ReportDiagnostic(UseHandlerSuffixRule, type);
                 }
@@ -288,7 +288,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 
             if (IsNestedClass(type))
             {
-                if (!type.Name.EndsWith("Handler"))
+                if (!type.Name.EndsWith("Handler", StringComparison.Ordinal))
                 {
                     context.ReportDiagnostic(UseHandlerSuffixRule, type);
                 }
