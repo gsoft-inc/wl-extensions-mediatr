@@ -168,16 +168,19 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            var isNestedHandler = IsNestedClass(type);
-
-            if (!isNestedHandler && !NameEndsWithCommandHandlerOrQueryHandler(type))
+            if (IsNestedClass(type))
             {
-                context.ReportDiagnostic(UseCommandHandlerOrQueryHandlerSuffixRule, type);
+                if (!type.Name.EndsWith("Handler"))
+                {
+                    context.ReportDiagnostic(UseHandlerSuffixRule, type);
+                }
             }
-
-            if (isNestedHandler && !type.Name.EndsWith("Handler"))
+            else
             {
-                context.ReportDiagnostic(UseHandlerSuffixRule, type);
+                if (!NameEndsWithCommandHandlerOrQueryHandler(type))
+                {
+                    context.ReportDiagnostic(UseCommandHandlerOrQueryHandlerSuffixRule, type);
+                }
             }
         }
 
@@ -227,16 +230,19 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            var isNestedHandler = IsNestedClass(type);
-
-            if (!isNestedHandler && !NameEndsWithStreamQueryHandler(type))
+            if (IsNestedClass(type))
             {
-                context.ReportDiagnostic(UseStreamQueryHandlerSuffixRule, type);
+                if (!type.Name.EndsWith("Handler"))
+                {
+                    context.ReportDiagnostic(UseHandlerSuffixRule, type);
+                }
             }
-
-            if (isNestedHandler && !type.Name.EndsWith("Handler"))
+            else
             {
-                context.ReportDiagnostic(UseHandlerSuffixRule, type);
+                if (!NameEndsWithStreamQueryHandler(type))
+                {
+                    context.ReportDiagnostic(UseStreamQueryHandlerSuffixRule, type);
+                }
             }
         }
 
@@ -280,16 +286,19 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            var isNestedHandler = IsNestedClass(type);
-
-            if (!isNestedHandler && !NameEndsWithNotificationHandlerOrEventHandler(type))
+            if (IsNestedClass(type))
             {
-                context.ReportDiagnostic(UseNotificationHandlerOrEventHandlerSuffixRule, type);
+                if (!type.Name.EndsWith("Handler"))
+                {
+                    context.ReportDiagnostic(UseHandlerSuffixRule, type);
+                }
             }
-
-            if (isNestedHandler && !type.Name.EndsWith("Handler"))
+            else
             {
-                context.ReportDiagnostic(UseHandlerSuffixRule, type);
+                if (!NameEndsWithNotificationHandlerOrEventHandler(type))
+                {
+                    context.ReportDiagnostic(UseNotificationHandlerOrEventHandlerSuffixRule, type);
+                }
             }
         }
 
