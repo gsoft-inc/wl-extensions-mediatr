@@ -175,7 +175,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
                 context.ReportDiagnostic(UseCommandHandlerOrQueryHandlerSuffixRule, type);
             }
 
-            if (isNestedHandler && !type.Name.EndsWith("Handler"))
+            if (isNestedHandler && !type.Name.EndsWith("Handler", StringComparison.Ordinal))
             {
                 context.ReportDiagnostic(UseHandlerSuffixRule, type);
             }
@@ -234,7 +234,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
                 context.ReportDiagnostic(UseStreamQueryHandlerSuffixRule, type);
             }
 
-            if (isNestedHandler && !type.Name.EndsWith("Handler"))
+            if (isNestedHandler && !type.Name.EndsWith("Handler", StringComparison.Ordinal))
             {
                 context.ReportDiagnostic(UseHandlerSuffixRule, type);
             }
@@ -287,7 +287,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
                 context.ReportDiagnostic(UseNotificationHandlerOrEventHandlerSuffixRule, type);
             }
 
-            if (isNestedHandler && !type.Name.EndsWith("Handler"))
+            if (isNestedHandler && !type.Name.EndsWith("Handler", StringComparison.Ordinal))
             {
                 context.ReportDiagnostic(UseHandlerSuffixRule, type);
             }
