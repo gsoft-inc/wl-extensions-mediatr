@@ -78,6 +78,7 @@ await mediator.SendAsync(new SayHelloCommand(null!), CancellationToken.None);
 | GMDTR10 | Design   | Warning  | Handlers should not be public                                |
 | GMDTR11 | Design   | Warning  | Use 'AddMediator' extension method instead of 'AddMediatR'   |
 | GMDTR12 | Design   | Warning  | Use method ending with 'Async' instead                       |
+| GMDTR13 | Naming   | Warning  | Name should end with 'Handler'                               |
 
 In order to change the severity of one of these diagnostic rules, use a `.editorconfig` file, for instance:
 ```ini
