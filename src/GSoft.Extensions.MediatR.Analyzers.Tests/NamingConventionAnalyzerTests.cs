@@ -90,6 +90,22 @@ internal class MyQueryHandler : IRequestHandler<MyQuery, string>
         await this.WithSourceCode(source).RunAsync();
     }
 
+    [Theory]
+    [InlineData("Handler")]
+    [InlineData("MyCommandHandler")]
+    public async Task Nested_RequestHandler_Ending_With_Handler_Returns_No_Diagnostic(string handlerName)
+    {
+        const string source = @"
+public sealed record MyCommand : IRequest
+{{
+    internal sealed class {0} : IRequestHandler<MyCommand>
+    {{
+        public Task Handle(MyCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
+    }}
+}}";
+        await this.WithSourceCode(string.Format(source, handlerName)).RunAsync();
+    }
+
     [Fact]
     public async Task StreamRequestHandler_Ending_With_StreamQueryHandler_Returns_No_Diagnostic()
     {
@@ -104,6 +120,25 @@ internal class MyStreamQueryHandler : IStreamRequestHandler<MyStreamQuery, strin
     }
 }";
         await this.WithSourceCode(source).RunAsync();
+    }
+
+    [Theory]
+    [InlineData("Handler")]
+    [InlineData("MyStreamQueryHandler")]
+    public async Task Nested_StreamRequestHandler_Ending_With_Handler_Returns_No_Diagnostic(string handlerName)
+    {
+        const string source = @"
+public class MyStreamQuery : IStreamRequest<string>
+{{
+    internal class {0} : IStreamRequestHandler<MyStreamQuery, string>
+    {{
+        public async IAsyncEnumerable<string> Handle(MyStreamQuery query, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {{
+            yield break;
+        }}
+    }}
+}}";
+        await this.WithSourceCode(string.Format(source, handlerName)).RunAsync();
     }
 
     [Fact]
@@ -130,6 +165,22 @@ internal class MyEventHandler : INotificationHandler<MyEvent>
     public Task Handle(MyEvent evt, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
         await this.WithSourceCode(source).RunAsync();
+    }
+
+    [Theory]
+    [InlineData("Handler")]
+    [InlineData("MynotificationHandler")]
+    public async Task Nested_NotificationHandler_Ending_With_Handler_Returns_No_Diagnostic(string handlerName)
+    {
+        const string source = @"
+public class MyNotification : INotification
+{{
+    internal class {0} : INotificationHandler<MyNotification>
+    {{
+        public Task Handle(MyNotification notification, CancellationToken cancellationToken) => Task.CompletedTask;
+    }}
+}}";
+        await this.WithSourceCode(string.Format(source, handlerName)).RunAsync();
     }
 
     [Fact]
@@ -177,6 +228,63 @@ internal class SomethingHandler : INotificationHandler<MyNotification>
 }";
         await this.WithSourceCode(source)
             .WithExpectedDiagnostic(NamingConventionAnalyzer.UseNotificationHandlerOrEventHandlerSuffixRule, startLine: 4, startColumn: 16, endLine: 4, endColumn: 32)
+            .RunAsync();
+    }
+
+    [Theory]
+    [InlineData("HandlerClass", 39)]
+    [InlineData("HandlingClass", 40)]
+    public async Task Nested_RequestHandler_Not_Ending_With_Handler_Returns_One_Diagnostic(string handlerClassName, int endColumn)
+    {
+        const string source = @"
+public sealed record MyCommand : IRequest
+{{
+    internal sealed class {0} : IRequestHandler<MyCommand>
+    {{
+        public Task Handle(MyCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
+    }}
+}}";
+        await this.WithSourceCode(string.Format(source, handlerClassName))
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseHandlerSuffixRule, startLine: 4, startColumn: 27, endLine: 4, endColumn: endColumn)
+            .RunAsync();
+    }
+
+    [Theory]
+    [InlineData("HandlerClass", 32)]
+    [InlineData("HandlingClass", 33)]
+    public async Task Nested_StreamRequestHandler_Not_Ending_With_Handler_Returns_One_Diagnostic(string handlerClassName, int endColumn)
+    {
+        const string source = @"
+public class MyStreamQuery : IStreamRequest<string>
+{{
+    internal class {0} : IStreamRequestHandler<MyStreamQuery, string>
+    {{
+        public async IAsyncEnumerable<string> Handle(MyStreamQuery query, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {{
+            yield break;
+        }}
+    }}
+}}";
+        await this.WithSourceCode(string.Format(source, handlerClassName))
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseHandlerSuffixRule, startLine: 4, startColumn: 20, endLine: 4, endColumn: endColumn)
+            .RunAsync();
+    }
+
+    [Theory]
+    [InlineData("HandlerClass", 32)]
+    [InlineData("HandlingClass", 33)]
+    public async Task Nested_NotificationHandler_Not_Ending_With_Handler_Returns_One_Diagnostic(string handlerClassName, int endColumn)
+    {
+        const string source = @"
+public class MyNotification : INotification
+{{
+    internal class {0} : INotificationHandler<MyNotification>
+    {{
+        public Task Handle(MyNotification notification, CancellationToken cancellationToken) => Task.CompletedTask;
+    }}
+}}";
+        await this.WithSourceCode(string.Format(source, handlerClassName))
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseHandlerSuffixRule, startLine: 4, startColumn: 20, endLine: 4, endColumn: endColumn)
             .RunAsync();
     }
 }

@@ -18,4 +18,5 @@ internal static class RuleIdentifiers
     public const string HandlersShouldNotBePublic = "GMDTR10";
     public const string UseAddMediatorExtensionMethod = "GMDTR11";
     public const string UseMethodEndingWithAsync = "GMDTR12";
+    public const string UseHandlerSuffix = "GMDTR13";
 }
