@@ -26,6 +26,15 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
+    internal static readonly DiagnosticDescriptor UseHandlerSuffixRule = new DiagnosticDescriptor(
+        id: RuleIdentifiers.UseHandlerSuffix,
+        title: "Name should end with 'Handler'",
+        messageFormat: "Name should end with 'Handler'",
+        category: RuleCategories.Naming,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        helpLinkUri: RuleIdentifiers.HelpUri);
+
     internal static readonly DiagnosticDescriptor UseStreamQuerySuffixRule = new DiagnosticDescriptor(
         id: RuleIdentifiers.UseStreamQuerySuffix,
         title: "Name should end with 'StreamQuery'",
@@ -65,6 +74,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         UseCommandOrQuerySuffixRule,
         UseCommandHandlerOrQueryHandlerSuffixRule,
+        UseHandlerSuffixRule,
         UseStreamQuerySuffixRule,
         UseStreamQueryHandlerSuffixRule,
         UseNotificationOrEventSuffixRule,
@@ -153,9 +163,24 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 
         private void AnalyzeRequestHandler(SymbolAnalysisContext context, ITypeSymbol type)
         {
-            if (this.ImplementsRequestHandlerInterface(type) && !NameEndsWithCommandHandlerOrQueryHandler(type))
+            if (!this.ImplementsRequestHandlerInterface(type))
             {
-                context.ReportDiagnostic(UseCommandHandlerOrQueryHandlerSuffixRule, type);
+                return;
+            }
+
+            if (IsNestedClass(type))
+            {
+                if (!type.Name.EndsWith("Handler", StringComparison.Ordinal))
+                {
+                    context.ReportDiagnostic(UseHandlerSuffixRule, type);
+                }
+            }
+            else
+            {
+                if (!NameEndsWithCommandHandlerOrQueryHandler(type))
+                {
+                    context.ReportDiagnostic(UseCommandHandlerOrQueryHandlerSuffixRule, type);
+                }
             }
         }
 
@@ -171,7 +196,8 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 
         private static bool NameEndsWithCommandHandlerOrQueryHandler(ISymbol type)
         {
-            return type.Name.EndsWith("CommandHandler", StringComparison.Ordinal) || type.Name.EndsWith("QueryHandler", StringComparison.Ordinal);
+            return type.Name.EndsWith("CommandHandler", StringComparison.Ordinal) ||
+                   type.Name.EndsWith("QueryHandler", StringComparison.Ordinal);
         }
 
         private void AnalyzeStreamRequest(SymbolAnalysisContext context, ITypeSymbol type)
@@ -199,9 +225,24 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 
         private void AnalyzeStreamRequestHandler(SymbolAnalysisContext context, ITypeSymbol type)
         {
-            if (this.ImplementsStreamRequestHandlerInterface(type) && !NameEndsWithStreamQueryHandler(type))
+            if (!this.ImplementsStreamRequestHandlerInterface(type))
             {
-                context.ReportDiagnostic(UseStreamQueryHandlerSuffixRule, type);
+                return;
+            }
+
+            if (IsNestedClass(type))
+            {
+                if (!type.Name.EndsWith("Handler", StringComparison.Ordinal))
+                {
+                    context.ReportDiagnostic(UseHandlerSuffixRule, type);
+                }
+            }
+            else
+            {
+                if (!NameEndsWithStreamQueryHandler(type))
+                {
+                    context.ReportDiagnostic(UseStreamQueryHandlerSuffixRule, type);
+                }
             }
         }
 
@@ -240,9 +281,24 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
 
         private void AnalyzeNotificationHandler(SymbolAnalysisContext context, ITypeSymbol type)
         {
-            if (this.ImplementsNotificationHandlerInterface(type) && !NameEndsWithNotificationHandlerOrEventHandler(type))
+            if (!this.ImplementsNotificationHandlerInterface(type))
             {
-                context.ReportDiagnostic(UseNotificationHandlerOrEventHandlerSuffixRule, type);
+                return;
+            }
+
+            if (IsNestedClass(type))
+            {
+                if (!type.Name.EndsWith("Handler", StringComparison.Ordinal))
+                {
+                    context.ReportDiagnostic(UseHandlerSuffixRule, type);
+                }
+            }
+            else
+            {
+                if (!NameEndsWithNotificationHandlerOrEventHandler(type))
+                {
+                    context.ReportDiagnostic(UseNotificationHandlerOrEventHandlerSuffixRule, type);
+                }
             }
         }
 
@@ -259,6 +315,11 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
         private static bool NameEndsWithNotificationHandlerOrEventHandler(ISymbol type)
         {
             return type.Name.EndsWith("NotificationHandler", StringComparison.Ordinal) || type.Name.EndsWith("EventHandler", StringComparison.Ordinal);
+        }
+
+        private static bool IsNestedClass(ISymbol type)
+        {
+            return type.ContainingType?.TypeKind == TypeKind.Class;
         }
     }
 }
