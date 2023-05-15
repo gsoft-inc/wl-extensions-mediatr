@@ -168,7 +168,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            var isNestedHandler = IsNestedHandler(type);
+            var isNestedHandler = IsNestedClass(type);
 
             if (!isNestedHandler && !NameEndsWithCommandHandlerOrQueryHandler(type))
             {
@@ -195,11 +195,6 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
         {
             return type.Name.EndsWith("CommandHandler", StringComparison.Ordinal) ||
                    type.Name.EndsWith("QueryHandler", StringComparison.Ordinal);
-        }
-
-        private static bool IsNestedHandler(ISymbol type)
-        {
-            return type.ContainingType?.TypeKind == TypeKind.Class;
         }
 
         private void AnalyzeStreamRequest(SymbolAnalysisContext context, ITypeSymbol type)
@@ -232,7 +227,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            var isNestedHandler = IsNestedHandler(type);
+            var isNestedHandler = IsNestedClass(type);
 
             if (!isNestedHandler && !NameEndsWithStreamQueryHandler(type))
             {
@@ -285,7 +280,7 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            var isNestedHandler = IsNestedHandler(type);
+            var isNestedHandler = IsNestedClass(type);
 
             if (!isNestedHandler && !NameEndsWithNotificationHandlerOrEventHandler(type))
             {
@@ -311,6 +306,11 @@ public sealed class NamingConventionAnalyzer : DiagnosticAnalyzer
         private static bool NameEndsWithNotificationHandlerOrEventHandler(ISymbol type)
         {
             return type.Name.EndsWith("NotificationHandler", StringComparison.Ordinal) || type.Name.EndsWith("EventHandler", StringComparison.Ordinal);
+        }
+
+        private static bool IsNestedClass(ISymbol type)
+        {
+            return type.ContainingType?.TypeKind == TypeKind.Class;
         }
     }
 }
