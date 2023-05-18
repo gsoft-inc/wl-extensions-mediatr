@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using MediatR;
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.DataContracts;
 
 namespace GSoft.Extensions.MediatR;
 
@@ -23,11 +22,14 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
 
     private async IAsyncEnumerable<TResponse> HandleWithTelemetryAsync(TRequest request, StreamHandlerDelegate<TResponse> next, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var operation = this._telemetryClient.StartOperation<DependencyTelemetry>(request.GetType().Name);
+        var operation = this._telemetryClient.StartActivityAwareDependencyOperation(request);
 
-        // Originating activity must be captured AFTER that the operation is created
-        // Because ApplicationInsights SDK creates another intermediate Activity
-        var originatingActivity = Activity.Current;
+        // After starting an operation, the Application Insights SDK creates its own internal activity, and it becomes the current activity.
+        // When we dispose an operation to send the telemetry, the Application Insights SDK expects the current activity to still be its own internal activity.
+        // However, IAsyncEnumerable is a special type, and its use can span across multiple activities.
+        // For instance, it can still be enumerated long after being returned by the mediator.
+        // We capture this AI internal activity to temporarily set it as the current one when disposing the operation.
+        var applicationInsightsInternalActivity = Activity.Current;
 
         try
         {
@@ -77,14 +79,14 @@ internal sealed class StreamRequestApplicationInsightsBehavior<TRequest, TRespon
         finally
         {
             // The dependency telemetry is sent when the operation is disposed
-            if (originatingActivity == null)
+            if (applicationInsightsInternalActivity == null)
             {
                 operation.Dispose();
             }
             else
             {
-                // Attach the telemetry to the originating activity
-                originatingActivity.ExecuteAsCurrentActivity(operation, static x => x.Dispose());
+                // Attach the telemetry to the original Application Insights internal activity
+                applicationInsightsInternalActivity.ExecuteAsCurrentActivity(operation, static x => x.Dispose());
             }
         }
     }
