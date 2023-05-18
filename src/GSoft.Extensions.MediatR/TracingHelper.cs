@@ -52,4 +52,6 @@ internal static class TracingHelper
             activity.AddTag(ExceptionStackTraceTag, ex.StackTrace);
         }
     }
+
+    public static bool IsMediatorActivity(Activity activity) => ReferenceEquals(ActivitySource, activity.Source);
 }

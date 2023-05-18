@@ -22,7 +22,7 @@ internal sealed class RequestApplicationInsightsBehavior<TRequest, TResponse> : 
 
     private async Task<TResponse> HandleWithTelemetry(TRequest request, RequestHandlerDelegate<TResponse> next)
     {
-        var operation = this._telemetryClient.StartOperation<DependencyTelemetry>(request.GetType().Name);
+        var operation = this._telemetryClient.StartActivityAwareDependencyOperation(request);
 
         // Originating activity must be captured AFTER that the operation is created
         // Because ApplicationInsights SDK creates another intermediate Activity
