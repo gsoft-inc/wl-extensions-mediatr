@@ -1,0 +1,20 @@
+#nullable enable
+Workleap.Extensions.MediatR.MediatorBuilder
+Workleap.Extensions.MediatR.MediatorBuilder.Services.get -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Workleap.Extensions.MediatR.RequestValidationException
+Workleap.Extensions.MediatR.RequestValidationException.Failures.get -> System.Collections.Generic.IEnumerable<string!>!
+Workleap.Extensions.MediatR.RequestValidationException.RequestName.get -> string!
+Workleap.Extensions.MediatR.RequestValidationException.RequestType.get -> System.Type!
+Workleap.Extensions.MediatR.RequestValidationException.RequestValidationException(string! requestName, System.Type! requestType, System.Collections.Generic.IEnumerable<string!>! failureMessages) -> void
+Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions
+override Workleap.Extensions.MediatR.RequestValidationException.Message.get -> string!
+MediatR.MediatorExtensions
+static MediatR.MediatorExtensions.PublishAsync<TNotification>(this MediatR.IPublisher! publisher, TNotification notification, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static MediatR.MediatorExtensions.SendAsync<TRequest>(this MediatR.ISender! sender, TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static MediatR.MediatorExtensions.SendAsync<TResponse>(this MediatR.ISender! sender, MediatR.IRequest<TResponse>! request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, params System.Reflection.Assembly![]! assemblies) -> Workleap.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, params System.Type![]! handlerAssemblyMarkerTypes) -> Workleap.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Microsoft.Extensions.DependencyInjection.MediatRServiceConfiguration!>? configure, params System.Reflection.Assembly![]! assemblies) -> Workleap.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Microsoft.Extensions.DependencyInjection.MediatRServiceConfiguration!>? configure, params System.Type![]! handlerAssemblyMarkerTypes) -> Workleap.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Collections.Generic.IEnumerable<System.Reflection.Assembly!>! assemblies, System.Action<Microsoft.Extensions.DependencyInjection.MediatRServiceConfiguration!>? configure) -> Workleap.Extensions.MediatR.MediatorBuilder!
+static Microsoft.Extensions.DependencyInjection.ServiceCollectionExtensions.AddMediator(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Collections.Generic.IEnumerable<System.Type!>! handlerAssemblyMarkerTypes, System.Action<Microsoft.Extensions.DependencyInjection.MediatRServiceConfiguration!>? configure) -> Workleap.Extensions.MediatR.MediatorBuilder!

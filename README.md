@@ -1,14 +1,14 @@
-# GSoft.Extensions.MediatR
+# Workleap.Extensions.MediatR
 
-[![nuget](https://img.shields.io/nuget/v/GSoft.Extensions.MediatR.svg?logo=nuget)](https://www.nuget.org/packages/GSoft.Extensions.MediatR/)
-[![build](https://img.shields.io/github/actions/workflow/status/gsoft-inc/gsoft-extensions-mediatr/publish.yml?logo=github&branch=main)](https://github.com/gsoft-inc/gsoft-extensions-mediatr/actions/workflows/publish.yml)
+[![nuget](https://img.shields.io/nuget/v/Workleap.Extensions.MediatR.svg?logo=nuget)](https://www.nuget.org/packages/Workleap.Extensions.MediatR/)
+[![build](https://img.shields.io/github/actions/workflow/status/gsoft-inc/wl-extensions-mediatr/publish.yml?logo=github&branch=main)](https://github.com/gsoft-inc/wl-extensions-mediatr/actions/workflows/publish.yml)
 
 This library ensures that [MediatR](https://github.com/jbogard/MediatR) is registered in the dependency injection container **as a singleton** and also adds several features:
 
 * [Activity-based OpenTelemetry](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs) instrumentation
 * [High-performance logging](https://learn.microsoft.com/en-us/dotnet/core/extensions/logger-message-generator) with `Debug` log level
 * Data annotations support for request validation, similar to [ASP.NET Core model validation](https://learn.microsoft.com/en-us/aspnet/core/mvc/models/validation)
-* [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) instrumentation (in a [separate NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/))
+* [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) instrumentation (in a [separate NuGet package](https://www.nuget.org/packages/Workleap.Extensions.MediatR.ApplicationInsights/))
 * [CQRS](https://microservices.io/patterns/data/cqrs.html) conventions and MediatR best practices with Roslyn analyzers
 
 
@@ -20,7 +20,7 @@ Use the `AddMediator(params Assembly[] assemblies)` extension method on your dep
 builder.Services.AddMediator(typeof(Program).Assembly /*, [more assemblies...] */);
 ```
 
-If you use [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) and want to instrument your handlers, you can install the dedicated [NuGet package](https://www.nuget.org/packages/GSoft.Extensions.MediatR.ApplicationInsights/):
+If you use [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview?tabs=net) and want to instrument your handlers, you can install the dedicated [NuGet package](https://www.nuget.org/packages/Workleap.Extensions.MediatR.ApplicationInsights/):
 
 ```csharp
 builder.Services.AddMediator(typeof(Program).Assembly).AddApplicationInsights();
@@ -99,4 +99,4 @@ When you are ready to **officially release** a stable NuGet package by following
 
 ## License
 
-Copyright © 2023, GSoft Group Inc. This code is licensed under the Apache License, Version 2.0. You may obtain a copy of this license at https://github.com/gsoft-inc/gsoft-license/blob/master/LICENSE.
+Copyright © 2023, Workleap. This code is licensed under the Apache License, Version 2.0. You may obtain a copy of this license at https://github.com/gsoft-inc/gsoft-license/blob/master/LICENSE.
