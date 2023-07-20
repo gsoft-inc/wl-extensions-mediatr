@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workleap.Extensions.MediatR", "Workleap.Extensions.MediatR\Workleap.Extensions.MediatR.csproj", "{4479DD41-F9CE-4DFD-8F7C-4ACC25BE203C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "files", "files", "{3B3625CC-919B-4216-9B50-BCFE297AA184}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workleap.Extensions.MediatR.Tests", "Workleap.Extensions.MediatR.Tests\Workleap.Extensions.MediatR.Tests.csproj", "{2A5429CC-E179-47E7-85BB-C1E33E2AFD8A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workleap.Extensions.MediatR.ApplicationInsights", "Workleap.Extensions.MediatR.ApplicationInsights\Workleap.Extensions.MediatR.ApplicationInsights.csproj", "{007F39F6-D733-4D11-8B16-7B7281892765}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workleap.Extensions.MediatR.Analyzers", "Workleap.Extensions.MediatR.Analyzers\Workleap.Extensions.MediatR.Analyzers.csproj", "{1D4F1BEA-7A43-4DA0-8760-E7C821126ED8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workleap.Extensions.MediatR.Analyzers.Tests", "Workleap.Extensions.MediatR.Analyzers.Tests\Workleap.Extensions.MediatR.Analyzers.Tests.csproj", "{1EBC15F4-F287-4FEF-AE9C-4D5F00BA2F49}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4479DD41-F9CE-4DFD-8F7C-4ACC25BE203C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4479DD41-F9CE-4DFD-8F7C-4ACC25BE203C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4479DD41-F9CE-4DFD-8F7C-4ACC25BE203C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4479DD41-F9CE-4DFD-8F7C-4ACC25BE203C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A5429CC-E179-47E7-85BB-C1E33E2AFD8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A5429CC-E179-47E7-85BB-C1E33E2AFD8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A5429CC-E179-47E7-85BB-C1E33E2AFD8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A5429CC-E179-47E7-85BB-C1E33E2AFD8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{007F39F6-D733-4D11-8B16-7B7281892765}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{007F39F6-D733-4D11-8B16-7B7281892765}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{007F39F6-D733-4D11-8B16-7B7281892765}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{007F39F6-D733-4D11-8B16-7B7281892765}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D4F1BEA-7A43-4DA0-8760-E7C821126ED8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D4F1BEA-7A43-4DA0-8760-E7C821126ED8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D4F1BEA-7A43-4DA0-8760-E7C821126ED8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D4F1BEA-7A43-4DA0-8760-E7C821126ED8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EBC15F4-F287-4FEF-AE9C-4D5F00BA2F49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EBC15F4-F287-4FEF-AE9C-4D5F00BA2F49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EBC15F4-F287-4FEF-AE9C-4D5F00BA2F49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EBC15F4-F287-4FEF-AE9C-4D5F00BA2F49}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
