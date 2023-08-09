@@ -1,0 +1,3 @@
+#nullable enable
+Workleap.Extensions.MediatR.MediatorBuilderExtensions
+static Workleap.Extensions.MediatR.MediatorBuilderExtensions.AddApplicationInsights(this Workleap.Extensions.MediatR.MediatorBuilder! builder) -> Workleap.Extensions.MediatR.MediatorBuilder!

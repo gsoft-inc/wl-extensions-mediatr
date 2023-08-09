@@ -1,3 +1,0 @@
-#nullable enable
-GSoft.Extensions.MediatR.MediatorBuilderExtensions
-static GSoft.Extensions.MediatR.MediatorBuilderExtensions.AddApplicationInsights(this GSoft.Extensions.MediatR.MediatorBuilder! builder) -> GSoft.Extensions.MediatR.MediatorBuilder!
