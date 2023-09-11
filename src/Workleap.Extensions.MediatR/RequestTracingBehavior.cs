@@ -6,10 +6,16 @@ namespace Workleap.Extensions.MediatR;
 internal sealed class RequestTracingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
-    public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         using var activity = TracingHelper.StartActivity();
-        return activity == null ? next() : HandleWithTracing(request, next, activity);
+
+        if (activity == null)
+        {
+           return await next().ConfigureAwait(false);
+        }
+
+        return await HandleWithTracing(request, next, activity).ConfigureAwait(false);
     }
 
     private static async Task<TResponse> HandleWithTracing(TRequest request, RequestHandlerDelegate<TResponse> next, Activity activity)
