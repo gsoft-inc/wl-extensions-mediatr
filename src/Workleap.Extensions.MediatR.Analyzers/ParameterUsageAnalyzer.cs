@@ -11,7 +11,7 @@ public sealed class ParameterUsageAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor UseGenericParameterRule = new DiagnosticDescriptor(
         id: RuleIdentifiers.UseGenericParameter,
-        title: "Use generic method instead",
+        title: "Use DomainEvent attribute on ",
         messageFormat: "Use generic method instead",
         category: RuleCategories.Design,
         defaultSeverity: DiagnosticSeverity.Warning,
