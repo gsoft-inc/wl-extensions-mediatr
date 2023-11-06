@@ -96,14 +96,11 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
 
         public void OnBlockStartAction(OperationBlockStartAnalysisContext context)
         {
-            if (context.OwningSymbol is IMethodSymbol method)
+            if (context.OwningSymbol is IMethodSymbol method && this.ImplementsHandlerInterface(method.ContainingType))
             {
-                if (this.ImplementsHandlerInterface(method.ContainingType))
-                {
-                    context.RegisterOperationAction(
-                        operationContext => this.AnalyzeHandlerOperationInvocation(operationContext, method.ContainingType),
-                        OperationKind.Invocation);
-                }
+                context.RegisterOperationAction(
+                    operationContext => this.AnalyzeHandlerOperationInvocation(operationContext, method.ContainingType),
+                    OperationKind.Invocation);
             }
         }
 

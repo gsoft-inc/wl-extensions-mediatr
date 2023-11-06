@@ -147,7 +147,7 @@ internal class MyNotificationHandler : INotificationHandler<MyNotification>
     }
 
     [Fact]
-    public async Task Internal_NotificationHandler_Calling_Command_Returns_XDiagnostic()
+    public async Task Notification_Handlers_Cant_Send_Query_Or_Command()
     {
         const string source = @"
 public class MyOtherQuery : IRequest<string> { }
