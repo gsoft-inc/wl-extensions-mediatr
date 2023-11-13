@@ -10,9 +10,9 @@ namespace Workleap.Extensions.MediatR.Analyzers;
 public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor HandlersShouldNotCallHandlerRule = new DiagnosticDescriptor(
-        id: RuleIdentifiers.HandlersShouldNotCallHandler,
-        title: "Handlers should not call other handlers",
-        messageFormat: "Handlers should not call other handlers",
+        id: RuleIdentifiers.RequestHandlersShouldNotCallHandler,
+        title: "Request handlers should not call other handlers",
+        messageFormat: "Request handlers should not call other handlers",
         category: RuleCategories.Design,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -57,7 +57,8 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
         };
 
         private readonly ImmutableHashSet<INamedTypeSymbol> _mediatorTypesWithSendOrSendAsyncMethod;
-        private readonly ImmutableHashSet<INamedTypeSymbol> _handlerTypes;
+        private readonly ImmutableHashSet<INamedTypeSymbol> _requestHandlerTypes;
+        private readonly ImmutableHashSet<INamedTypeSymbol> _notificationHandlerTypes;
         private readonly INamedTypeSymbol _genericRequestType;
 
         public AnalyzerImplementation(Compilation compilation)
@@ -69,22 +70,27 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
             mediatorTypesWithSendOrSendAsyncMethodBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.WorkleapMediatorExtensionsClass, KnownSymbolNames.WorkleapExtMediatRAssembly));
             this._mediatorTypesWithSendOrSendAsyncMethod = mediatorTypesWithSendOrSendAsyncMethodBuilder.ToImmutable();
 
-            var handlerTypesBuilder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-            handlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT1, KnownSymbolNames.MediatRAssembly));
-            handlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT2, KnownSymbolNames.MediatRAssembly));
-            handlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.NotificationHandlerInterface, KnownSymbolNames.MediatRAssembly));
-            this._handlerTypes = handlerTypesBuilder.ToImmutable();
+            var requestHandlerTypesBuilder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+            requestHandlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT1, KnownSymbolNames.MediatRAssembly));
+            requestHandlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.RequestHandlerInterfaceT2, KnownSymbolNames.MediatRAssembly));
+            this._requestHandlerTypes = requestHandlerTypesBuilder.ToImmutable();
+
+            var notificationHandlerTypesBuilder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+            notificationHandlerTypesBuilder.AddIfNotNull(compilation.GetBestTypeByMetadataName(KnownSymbolNames.NotificationHandlerInterface, KnownSymbolNames.MediatRAssembly));
+            this._notificationHandlerTypes = notificationHandlerTypesBuilder.ToImmutable();
 
             this._genericRequestType = compilation.GetBestTypeByMetadataName(KnownSymbolNames.GenericRequestInterface, KnownSymbolNames.MediatRContractsAssembly)!;
         }
 
-        public bool IsValid => this._mediatorTypesWithSendOrSendAsyncMethod.Count == 4 && this._handlerTypes.Count == 3 && this._genericRequestType != null;
+        public bool IsValid => this._mediatorTypesWithSendOrSendAsyncMethod.Count == 4 && this._requestHandlerTypes.Count == 2 && this._notificationHandlerTypes.Count == 1 && this._genericRequestType != null;
 
         public void OnBlockStartAction(OperationBlockStartAnalysisContext context)
         {
             if (context.OwningSymbol is IMethodSymbol method && this.ImplementsHandlerInterface(method.ContainingType))
             {
-                context.RegisterOperationAction(this.AnalyzeOperationInvocation, OperationKind.Invocation);
+                context.RegisterOperationAction(
+                    operationContext => this.AnalyzeHandlerOperationInvocation(operationContext, method.ContainingType),
+                    OperationKind.Invocation);
             }
         }
 
@@ -101,23 +107,42 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
 
         private bool ImplementsHandlerInterface(ITypeSymbol type)
         {
-            return type.AllInterfaces.Any(this.IsHandler);
+            return this.ImplementsRequestHandlerInterface(type) || this.ImplementsNotificationHandlerInterface(type);
         }
 
-        private bool IsHandler(INamedTypeSymbol symbol)
+        private bool ImplementsRequestHandlerInterface(ITypeSymbol type)
         {
-            return symbol is { IsGenericType: true, Arity: 1 or 2 } && this._handlerTypes.Contains(symbol.ConstructedFrom);
+            return type.AllInterfaces.Any(this.IsRequestHandler);
         }
 
-        private void AnalyzeOperationInvocation(OperationAnalysisContext context)
+        private bool IsRequestHandler(INamedTypeSymbol symbol)
+        {
+            return symbol is { IsGenericType: true, Arity: 1 or 2 } &&
+                   this._requestHandlerTypes.Contains(symbol.ConstructedFrom);
+        }
+
+        private bool ImplementsNotificationHandlerInterface(ITypeSymbol type)
+        {
+            return type.AllInterfaces.Any(this.IsNotificationHandler);
+        }
+
+        private bool IsNotificationHandler(INamedTypeSymbol symbol)
+        {
+            return symbol is { IsGenericType: true, Arity: 1 } &&
+                   this._notificationHandlerTypes.Contains(symbol.ConstructedFrom);
+        }
+
+        private void AnalyzeHandlerOperationInvocation(OperationAnalysisContext context, ITypeSymbol containingType)
         {
             if (context.Operation is IInvocationOperation operation && this.IsMediatorSendMethodOrSendAsyncExtensionMethod(operation))
             {
                 if (ContainingTypeNameEndsWithCommandHandler(context) && this.IsHandlingQueryArgument(operation))
                 {
                     // This is fine, command handlers are allowed to consume query handlers
+                    return;
                 }
-                else
+
+                if (this.ImplementsRequestHandlerInterface(containingType))
                 {
                     context.ReportDiagnostic(HandlersShouldNotCallHandlerRule, operation);
                 }

@@ -145,4 +145,30 @@ internal class MyNotificationHandler : INotificationHandler<MyNotification>
 }";
         await this.WithSourceCode(source).RunAsync();
     }
+
+    [Fact]
+    public async Task Notification_Handlers_Can_Send_Query_Or_Command()
+    {
+        const string source = @"
+public class MyOtherQuery : IRequest<string> { }
+
+public class MyOtherCommand : IRequest { }
+
+public class MyNotification : INotification { }
+
+internal class MyNotificationHandler : INotificationHandler<MyNotification>
+{
+    public async Task Handle(MyNotification notification, CancellationToken cancellationToken)
+    {
+        var mediator = (IMediator)null!;
+        await mediator.Send(new MyOtherCommand(), CancellationToken.None);
+        await mediator.Send(new MyOtherQuery(), CancellationToken.None);
+        await mediator.SendAsync(new MyOtherCommand(), CancellationToken.None);
+        await mediator.SendAsync(new MyOtherQuery(), CancellationToken.None);
+        return;
+    }
+}";
+
+        await this.WithSourceCode(source).RunAsync();
+    }
 }

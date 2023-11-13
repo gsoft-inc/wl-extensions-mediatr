@@ -14,7 +14,7 @@ internal static class RuleIdentifiers
     public const string UseNotificationHandlerOrEventHandlerSuffix = "GMDTR06";
     public const string UseGenericParameter = "GMDTR07";
     public const string ProvideCancellationToken = "GMDTR08";
-    public const string HandlersShouldNotCallHandler = "GMDTR09";
+    public const string RequestHandlersShouldNotCallHandler = "GMDTR09";
     public const string HandlersShouldNotBePublic = "GMDTR10";
     public const string UseAddMediatorExtensionMethod = "GMDTR11";
     public const string UseMethodEndingWithAsync = "GMDTR12";
