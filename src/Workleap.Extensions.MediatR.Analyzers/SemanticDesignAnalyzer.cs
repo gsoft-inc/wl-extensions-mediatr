@@ -127,7 +127,8 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
 
         private bool IsRequestHandler(INamedTypeSymbol symbol)
         {
-            return symbol is { IsGenericType: true, Arity: 1 or 2 } && this._requestHandlerTypes.Contains(symbol.ConstructedFrom);
+            return symbol is { IsGenericType: true, Arity: 1 or 2 } &&
+                   this._requestHandlerTypes.Contains(symbol.ConstructedFrom);
         }
 
         private bool ImplementsNotificationHandlerInterface(ITypeSymbol type)
@@ -137,7 +138,8 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
 
         private bool IsNotificationHandler(INamedTypeSymbol symbol)
         {
-            return symbol is { IsGenericType: true, Arity: 1 or 2 } && this._notificationHandlerTypes.Contains(symbol.ConstructedFrom);
+            return symbol is { IsGenericType: true, Arity: 1 } &&
+                   this._notificationHandlerTypes.Contains(symbol.ConstructedFrom);
         }
 
         private void AnalyzeHandlerOperationInvocation(OperationAnalysisContext context, ITypeSymbol containingType)
@@ -147,17 +149,16 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
                 if (ContainingTypeNameEndsWithCommandHandler(context) && this.IsHandlingQueryArgument(operation))
                 {
                     // This is fine, command handlers are allowed to consume query handlers
+                    return;
                 }
-                else
+
+                if (this.ImplementsRequestHandlerInterface(containingType))
                 {
-                    if (this.ImplementsRequestHandlerInterface(containingType))
-                    {
-                        context.ReportDiagnostic(HandlersShouldNotCallHandlerRule, operation);
-                    }
-                    else if (this.ImplementsNotificationHandlerInterface(containingType))
-                    {
-                        context.ReportDiagnostic(NotificationHandlersShouldNotCallHandlerRule, operation);
-                    }
+                    context.ReportDiagnostic(HandlersShouldNotCallHandlerRule, operation);
+                }
+                else if (this.ImplementsNotificationHandlerInterface(containingType))
+                {
+                    context.ReportDiagnostic(NotificationHandlersShouldNotCallHandlerRule, operation);
                 }
             }
         }
