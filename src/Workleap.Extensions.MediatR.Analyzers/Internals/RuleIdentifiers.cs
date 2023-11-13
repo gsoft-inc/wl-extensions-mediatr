@@ -19,5 +19,4 @@ internal static class RuleIdentifiers
     public const string UseAddMediatorExtensionMethod = "GMDTR11";
     public const string UseMethodEndingWithAsync = "GMDTR12";
     public const string UseHandlerSuffix = "GMDTR13";
-    public const string NotificationHandlersShouldNotCallHandler = "GMDTR14";
 }

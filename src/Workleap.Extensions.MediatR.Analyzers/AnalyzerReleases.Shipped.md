@@ -17,4 +17,3 @@ GMDTR10 | Design   | Warning | SemanticDesignAnalyzer, [Documentation](https://g
 GMDTR11 | Design   | Warning | ServiceRegistrationAnalyzer, [Documentation](https://github.com/gsoft-inc/wl-extensions-mediatr)
 GMDTR12 | Design   | Warning | ParameterUsageAnalyzer, [Documentation](https://github.com/gsoft-inc/wl-extensions-mediatr)
 GMDTR13 | Naming   | Warning | NamingConventionAnalyzer, [Documentation](https://github.com/gsoft-inc/wl-extensions-mediatr)
-GMDTR14 | Design   | Warning | SemanticDesignAnalyzer, [Documentation](https://github.com/gsoft-inc/wl-extensions-mediatr)

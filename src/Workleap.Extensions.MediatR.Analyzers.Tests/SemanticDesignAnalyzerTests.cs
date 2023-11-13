@@ -147,7 +147,7 @@ internal class MyNotificationHandler : INotificationHandler<MyNotification>
     }
 
     [Fact]
-    public async Task Notification_Handlers_Cant_Send_Query_Or_Command()
+    public async Task Notification_Handlers_Can_Send_Query_Or_Command()
     {
         const string source = @"
 public class MyOtherQuery : IRequest<string> { }
@@ -169,11 +169,6 @@ internal class MyNotificationHandler : INotificationHandler<MyNotification>
     }
 }";
 
-        await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.NotificationHandlersShouldNotCallHandlerRule, startLine: 13, startColumn: 24, endLine: 13, endColumn: 28)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.NotificationHandlersShouldNotCallHandlerRule, startLine: 14, startColumn: 24, endLine: 14, endColumn: 28)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.NotificationHandlersShouldNotCallHandlerRule, startLine: 15, startColumn: 24, endLine: 15, endColumn: 33)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.NotificationHandlersShouldNotCallHandlerRule, startLine: 16, startColumn: 24, endLine: 16, endColumn: 33)
-            .RunAsync();
+        await this.WithSourceCode(source).RunAsync();
     }
 }

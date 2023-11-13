@@ -18,15 +18,6 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true,
         helpLinkUri: RuleIdentifiers.HelpUri);
 
-    internal static readonly DiagnosticDescriptor NotificationHandlersShouldNotCallHandlerRule = new DiagnosticDescriptor(
-        id: RuleIdentifiers.NotificationHandlersShouldNotCallHandler,
-        title: "Notification handlers should not call other handlers",
-        messageFormat: "Notification handlers should not call other handlers",
-        category: RuleCategories.Design,
-        defaultSeverity: DiagnosticSeverity.Warning,
-        isEnabledByDefault: true,
-        helpLinkUri: RuleIdentifiers.HelpUri);
-
     internal static readonly DiagnosticDescriptor HandlersShouldNotBePublicRule = new DiagnosticDescriptor(
         id: RuleIdentifiers.HandlersShouldNotBePublic,
         title: "Handlers should not be public",
@@ -38,7 +29,6 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         HandlersShouldNotCallHandlerRule,
-        NotificationHandlersShouldNotCallHandlerRule,
         HandlersShouldNotBePublicRule);
 
     public override void Initialize(AnalysisContext context)
@@ -155,10 +145,6 @@ public sealed class SemanticDesignAnalyzer : DiagnosticAnalyzer
                 if (this.ImplementsRequestHandlerInterface(containingType))
                 {
                     context.ReportDiagnostic(HandlersShouldNotCallHandlerRule, operation);
-                }
-                else if (this.ImplementsNotificationHandlerInterface(containingType))
-                {
-                    context.ReportDiagnostic(NotificationHandlersShouldNotCallHandlerRule, operation);
                 }
             }
         }
