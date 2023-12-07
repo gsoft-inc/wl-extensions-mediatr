@@ -39,6 +39,7 @@
         "^Microsoft\\.Extensions\\.",
         "^Microsoft\\.CodeAnalysis\\.",
         "^Microsoft\\.Bcl\\.AsyncInterfaces$",
+        "^Microsoft\\.SourceLink\\.GitHub",
         "^System\\."
       ],
       "groupName": "Ignored NuGet dependencies",
