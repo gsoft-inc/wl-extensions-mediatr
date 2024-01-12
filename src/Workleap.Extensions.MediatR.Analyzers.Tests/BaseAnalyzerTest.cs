@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using MediatR;
+﻿using MediatR;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
@@ -34,12 +33,7 @@ global using MediatR;";
         this.TestState.Sources.Add(CSharp10GlobalUsings);
         this.TestState.Sources.Add(MediatRGlobalUsings);
 
-#if NETFRAMEWORK
-        this.TestState.ReferenceAssemblies = ReferenceAssemblies.NetStandard.NetStandard20
-            .WithPackages(ImmutableArray.Create(new PackageIdentity("Microsoft.Bcl.AsyncInterfaces", "6.0.0")));
-#elif NET6_0
         this.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net60;
-#endif
 
         // Reference "Microsoft.Extensions.DependencyInjection" assembly
         this.TestState.AdditionalReferences.Add(typeof(IServiceCollection).Assembly);

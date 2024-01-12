@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using MediatR;
+using MediatR.Pipeline;
+using MediatR.Registration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Workleap.Extensions.MediatR;
@@ -16,9 +19,10 @@ public sealed class MediatorBuilder
             }
         }
 
+        this.Services = services;
+
         EnsureAddMediatorIsOnlyCalledOnce(services);
         services.AddMediatR(ConfigurationFactory(RegisterAssemblies, configure));
-        this.Services = services;
     }
 
     internal MediatorBuilder(IServiceCollection services, IEnumerable<Type> handlerAssemblyMarkerTypes, Action<MediatRServiceConfiguration>? configure)
@@ -31,9 +35,10 @@ public sealed class MediatorBuilder
             }
         }
 
+        this.Services = services;
+
         EnsureAddMediatorIsOnlyCalledOnce(services);
         services.AddMediatR(ConfigurationFactory(RegisterAssembliesOfTypes, configure));
-        this.Services = services;
     }
 
     public IServiceCollection Services { get; }
@@ -57,6 +62,10 @@ public sealed class MediatorBuilder
             ConfigureDefaultConfiguration(configuration);
 
             configureRegistrations(configuration);
+
+            // TEMPORARY HACK UNTIL AUTOMATIC REGISTRATION OF PRE/POST PROCESSORS IS FIXED
+            // See: https://github.com/jbogard/MediatR/pull/989#issuecomment-1883574379
+            RegisterPreAndPostNonGenericClosedProcessors(configuration);
 
             // Allow developers to override default configuration if needed
             userDefinedConfigure?.Invoke(configuration);
@@ -83,5 +92,54 @@ public sealed class MediatorBuilder
         // Then validation so errors can be recorded by tracing and logging
         configuration.BehaviorsToRegister.Add(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>), ServiceLifetime.Singleton));
         configuration.BehaviorsToRegister.Add(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestValidationBehavior<,>), ServiceLifetime.Singleton));
+    }
+
+    [SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1201:Elements should appear in the correct order", Justification = "Keeping this close to where it's used")]
+    private static readonly PropertyInfo? AssembliesToRegisterPropertyInfo = typeof(MediatRServiceConfiguration).GetProperty(
+        name: "AssembliesToRegister",
+        bindingAttr: BindingFlags.Instance | BindingFlags.NonPublic,
+        binder: null,
+        returnType: typeof(List<Assembly>),
+        types: Array.Empty<Type>(),
+        modifiers: null);
+
+    [SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1201:Elements should appear in the correct order", Justification = "Keeping this close to where it's used")]
+    private static readonly MethodInfo? ConnectImplementationsToTypesClosingMethodInfo = typeof(ServiceRegistrar).GetMethod(
+        name: "ConnectImplementationsToTypesClosing",
+        bindingAttr: BindingFlags.Static | BindingFlags.NonPublic,
+        binder: null,
+        types: new[] { typeof(Type), typeof(IServiceCollection), typeof(IEnumerable<Assembly>), typeof(bool), typeof(MediatRServiceConfiguration) },
+        modifiers: null);
+
+    private static void RegisterPreAndPostNonGenericClosedProcessors(MediatRServiceConfiguration configuration)
+    {
+        if (AssembliesToRegisterPropertyInfo == null || ConnectImplementationsToTypesClosingMethodInfo == null)
+        {
+            // If this happens, it means MediatR internals have changed. Maybe this hack isn't needed anymore?
+            // In any case, our tests will reflect if this is still needed or not
+            return;
+        }
+
+        // We basically execute the same code that worked in MediatR 12.0.1 when pre/post processors were automatically registered:
+        // https://github.com/jbogard/MediatR/blob/v12.0.1/src/MediatR/Registration/ServiceRegistrar.cs#L21-L22
+        var assembliesToRegister = (List<Assembly>)AssembliesToRegisterPropertyInfo.GetValue(configuration)!;
+
+        // Populating "RequestPreProcessorsToRegister" will make MediatR register the pre-processor behavior that will invoke the processors:
+        // https://github.com/jbogard/MediatR/blob/v12.2.0/src/MediatR/Registration/ServiceRegistrar.cs#L247-L251
+        var preProcessorServiceDescriptors = new ServiceCollection();
+        ConnectImplementationsToTypesClosingMethodInfo.Invoke(obj: null, parameters: new object?[]
+        {
+            typeof(IRequestPreProcessor<>), preProcessorServiceDescriptors, assembliesToRegister, true, configuration,
+        });
+        configuration.RequestPreProcessorsToRegister.AddRange(preProcessorServiceDescriptors);
+
+        // Same thing for the post-processors:
+        // https://github.com/jbogard/MediatR/blob/v12.2.0/src/MediatR/Registration/ServiceRegistrar.cs#L253-L257
+        var postProcessorServiceDescriptors = new ServiceCollection();
+        ConnectImplementationsToTypesClosingMethodInfo.Invoke(obj: null, parameters: new object?[]
+        {
+            typeof(IRequestPostProcessor<,>), postProcessorServiceDescriptors, assembliesToRegister, true, configuration,
+        });
+        configuration.RequestPostProcessorsToRegister.AddRange(postProcessorServiceDescriptors);
     }
 }
