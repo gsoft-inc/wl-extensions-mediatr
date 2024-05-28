@@ -60,6 +60,12 @@ global using MediatR;";
         return this;
     }
 
+    public BaseAnalyzerTest<TAnalyzer> WithExpectedDiagnostic(DiagnosticDescriptor descriptor, int locationIndex)
+    {
+        this.TestState.ExpectedDiagnostics.Add(new DiagnosticResult(descriptor).WithLocation(locationIndex));
+        return this;
+    }
+
     public BaseAnalyzerTest<TAnalyzer> WithDisabledDiagnostic(DiagnosticDescriptor descriptor)
     {
         this.DisabledDiagnostics.Add(descriptor.Id);

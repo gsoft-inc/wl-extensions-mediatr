@@ -40,27 +40,27 @@ public sealed class NamingConventionAnalyzerTests : BaseAnalyzerTest<NamingConve
     [Fact]
     public async Task Request_Not_Ending_With_Command_Or_Query_Returns_One_Diagnostic()
     {
-        const string source = "public class MyClass : IRequest<string> { }";
+        const string source = "public sealed class {|#0:MyClass|} : IRequest<string> { }";
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseCommandOrQuerySuffixRule, startLine: 1, startColumn: 14, endLine: 1, endColumn: 21)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseCommandOrQuerySuffixRule, 0)
             .RunAsync();
     }
 
     [Fact]
     public async Task StreamRequest_Not_Ending_With_StreamQuery_Returns_One_Diagnostic()
     {
-        const string source = "public class MyClass : IStreamRequest<string> { }";
+        const string source = "public class {|#0:MyClass|} : IStreamRequest<string> { }";
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseStreamQuerySuffixRule, startLine: 1, startColumn: 14, endLine: 1, endColumn: 21)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseStreamQuerySuffixRule, 0)
             .RunAsync();
     }
 
     [Fact]
     public async Task Notification_Not_Ending_With_Notification_Or_Event_Returns_One_Diagnostic()
     {
-        const string source = "public class MyClass : INotification { }";
+        const string source = "public class {|#0:MyClass|} : INotification { }";
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseNotificationOrEventSuffixRule, startLine: 1, startColumn: 14, endLine: 1, endColumn: 21)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseNotificationOrEventSuffixRule, 0)
             .RunAsync();
     }
 
@@ -189,12 +189,12 @@ public class MyNotification : INotification
         const string source = @"
 public class MyCommand : IRequest { }
 
-internal class MyRequestHandler : IRequestHandler<MyCommand>
+internal class {|#0:MyRequestHandler|} : IRequestHandler<MyCommand>
 {
     public Task Handle(MyCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseCommandHandlerOrQueryHandlerSuffixRule, startLine: 4, startColumn: 16, endLine: 4, endColumn: 32)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseCommandHandlerOrQueryHandlerSuffixRule, 0)
             .RunAsync();
     }
 
@@ -204,7 +204,7 @@ internal class MyRequestHandler : IRequestHandler<MyCommand>
         const string source = @"
 public class MyStreamQuery : IStreamRequest<string> { }
 
-internal class MyStreamRequestHandler : IStreamRequestHandler<MyStreamQuery, string>
+internal class {|#0:MyStreamRequestHandler|} : IStreamRequestHandler<MyStreamQuery, string>
 {
     public async IAsyncEnumerable<string> Handle(MyStreamQuery query, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -212,7 +212,7 @@ internal class MyStreamRequestHandler : IStreamRequestHandler<MyStreamQuery, str
     }
 }";
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseStreamQueryHandlerSuffixRule, startLine: 4, startColumn: 16, endLine: 4, endColumn: 38)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseStreamQueryHandlerSuffixRule, 0)
             .RunAsync();
     }
 
@@ -222,42 +222,42 @@ internal class MyStreamRequestHandler : IStreamRequestHandler<MyStreamQuery, str
         const string source = @"
 public class MyNotification : INotification { }
 
-internal class SomethingHandler : INotificationHandler<MyNotification>
+internal class {|#0:SomethingHandler|} : INotificationHandler<MyNotification>
 {
     public Task Handle(MyNotification notification, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseNotificationHandlerOrEventHandlerSuffixRule, startLine: 4, startColumn: 16, endLine: 4, endColumn: 32)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseNotificationHandlerOrEventHandlerSuffixRule, 0)
             .RunAsync();
     }
 
     [Theory]
-    [InlineData("HandlerClass", 39)]
-    [InlineData("HandlingClass", 40)]
-    public async Task Nested_RequestHandler_Not_Ending_With_Handler_Returns_One_Diagnostic(string handlerClassName, int endColumn)
+    [InlineData("HandlerClass")]
+    [InlineData("HandlingClass")]
+    public async Task Nested_RequestHandler_Not_Ending_With_Handler_Returns_One_Diagnostic(string handlerClassName)
     {
         const string source = @"
 public sealed record MyCommand : IRequest
 {{
-    internal sealed class {0} : IRequestHandler<MyCommand>
+    internal sealed class {{|#0:{0}|}} : IRequestHandler<MyCommand>
     {{
         public Task Handle(MyCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
     }}
 }}";
         await this.WithSourceCode(string.Format(source, handlerClassName))
-            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseHandlerSuffixRule, startLine: 4, startColumn: 27, endLine: 4, endColumn: endColumn)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseHandlerSuffixRule, 0)
             .RunAsync();
     }
 
     [Theory]
-    [InlineData("HandlerClass", 32)]
-    [InlineData("HandlingClass", 33)]
-    public async Task Nested_StreamRequestHandler_Not_Ending_With_Handler_Returns_One_Diagnostic(string handlerClassName, int endColumn)
+    [InlineData("HandlerClass")]
+    [InlineData("HandlingClass")]
+    public async Task Nested_StreamRequestHandler_Not_Ending_With_Handler_Returns_One_Diagnostic(string handlerClassName)
     {
         const string source = @"
 public class MyStreamQuery : IStreamRequest<string>
 {{
-    internal class {0} : IStreamRequestHandler<MyStreamQuery, string>
+    internal class {{|#0:{0}|}} : IStreamRequestHandler<MyStreamQuery, string>
     {{
         public async IAsyncEnumerable<string> Handle(MyStreamQuery query, [EnumeratorCancellation] CancellationToken cancellationToken)
         {{
@@ -266,25 +266,25 @@ public class MyStreamQuery : IStreamRequest<string>
     }}
 }}";
         await this.WithSourceCode(string.Format(source, handlerClassName))
-            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseHandlerSuffixRule, startLine: 4, startColumn: 20, endLine: 4, endColumn: endColumn)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseHandlerSuffixRule, 0)
             .RunAsync();
     }
 
     [Theory]
-    [InlineData("HandlerClass", 32)]
-    [InlineData("HandlingClass", 33)]
-    public async Task Nested_NotificationHandler_Not_Ending_With_Handler_Returns_One_Diagnostic(string handlerClassName, int endColumn)
+    [InlineData("HandlerClass")]
+    [InlineData("HandlingClass")]
+    public async Task Nested_NotificationHandler_Not_Ending_With_Handler_Returns_One_Diagnostic(string handlerClassName)
     {
         const string source = @"
 public class MyNotification : INotification
 {{
-    internal class {0} : INotificationHandler<MyNotification>
+    internal class {{|#0:{0}|}} : INotificationHandler<MyNotification>
     {{
         public Task Handle(MyNotification notification, CancellationToken cancellationToken) => Task.CompletedTask;
     }}
 }}";
         await this.WithSourceCode(string.Format(source, handlerClassName))
-            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseHandlerSuffixRule, startLine: 4, startColumn: 20, endLine: 4, endColumn: endColumn)
+            .WithExpectedDiagnostic(NamingConventionAnalyzer.UseHandlerSuffixRule, 0)
             .RunAsync();
     }
 }
