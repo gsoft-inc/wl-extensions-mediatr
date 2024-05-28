@@ -10,11 +10,11 @@ public class MyRegistrations
 {
     public void AddCqrsAssemblies(IServiceCollection services)
     {
-        services.AddMediatR(x => x.RegisterServicesFromAssembly(typeof(MyRegistrations).Assembly));
+        services.{|#0:AddMediatR|}(x => x.RegisterServicesFromAssembly(typeof(MyRegistrations).Assembly));
     }
 }";
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(ServiceRegistrationAnalyzer.UseAddMediatorExtensionMethodRule, startLine: 6, startColumn: 18, endLine: 6, endColumn: 28)
+            .WithExpectedDiagnostic(ServiceRegistrationAnalyzer.UseAddMediatorExtensionMethodRule, 0)
             .RunAsync();
     }
 }

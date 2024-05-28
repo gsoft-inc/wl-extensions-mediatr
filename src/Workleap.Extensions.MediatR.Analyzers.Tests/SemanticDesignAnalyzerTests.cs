@@ -17,19 +17,19 @@ internal class MyQueryHandler : IRequestHandler<MyQuery, string>
     public async Task<string> Handle(MyQuery query, CancellationToken cancellationToken)
     {
         var mediator = (IMediator)null!;
-        await mediator.Send(new MyOtherCommand(), CancellationToken.None);
-        await mediator.Send(new MyOtherQuery(), CancellationToken.None);
-        await mediator.SendAsync(new MyOtherCommand(), CancellationToken.None);
-        await mediator.SendAsync(new MyOtherQuery(), CancellationToken.None);
+        await mediator.{|#0:Send|}(new MyOtherCommand(), CancellationToken.None);
+        await mediator.{|#1:Send|}(new MyOtherQuery(), CancellationToken.None);
+        await mediator.{|#2:SendAsync|}(new MyOtherCommand(), CancellationToken.None);
+        await mediator.{|#3:SendAsync|}(new MyOtherQuery(), CancellationToken.None);
         return string.Empty;
     }
 }";
 
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, startLine: 13, startColumn: 24, endLine: 13, endColumn: 28)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, startLine: 14, startColumn: 24, endLine: 14, endColumn: 28)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, startLine: 15, startColumn: 24, endLine: 15, endColumn: 33)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, startLine: 16, startColumn: 24, endLine: 16, endColumn: 33)
+            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, 0)
+            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, 1)
+            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, 2)
+            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, 3)
             .RunAsync();
     }
 
@@ -48,16 +48,16 @@ internal class MyCommandHandler : IRequestHandler<MyCommand>
     public async Task Handle(MyCommand command, CancellationToken cancellationToken)
     {
         var mediator = (IMediator)null!;
-        await mediator.Send(new MyOtherCommand(), CancellationToken.None);
+        await mediator.{|#0:Send|}(new MyOtherCommand(), CancellationToken.None);
         await mediator.Send(new MyOtherQuery(), CancellationToken.None);
-        await mediator.SendAsync(new MyOtherCommand(), CancellationToken.None);
+        await mediator.{|#1:SendAsync|}(new MyOtherCommand(), CancellationToken.None);
         await mediator.SendAsync(new MyOtherQuery(), CancellationToken.None);
     }
 }";
 
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, startLine: 13, startColumn: 24, endLine: 13, endColumn: 28)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, startLine: 15, startColumn: 24, endLine: 15, endColumn: 33)
+            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, 0)
+            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotCallHandlerRule, 1)
             .RunAsync();
     }
 
@@ -112,24 +112,24 @@ public class MyCommand : IRequest { }
 
 public class MyNotification : INotification { }
 
-public class MyQueryHandler : IRequestHandler<MyQuery, string>
+public class {|#0:MyQueryHandler|} : IRequestHandler<MyQuery, string>
 {
     public Task<string> Handle(MyQuery query, CancellationToken cancellationToken) => Task.FromResult(string.Empty);
 }
 
-public class MyCommandHandler : IRequestHandler<MyCommand>
+public class {|#1:MyCommandHandler|} : IRequestHandler<MyCommand>
 {
     public Task Handle(MyCommand command, CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
-public class MyNotificationHandler : INotificationHandler<MyNotification>
+public class {|#2:MyNotificationHandler|} : INotificationHandler<MyNotification>
 {
     public Task Handle(MyNotification notification, CancellationToken cancellationToken) => Task.CompletedTask;
 }";
         await this.WithSourceCode(source)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotBePublicRule, startLine: 8, startColumn: 14, endLine: 8, endColumn: 28)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotBePublicRule, startLine: 13, startColumn: 14, endLine: 13, endColumn: 30)
-            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotBePublicRule, startLine: 18, startColumn: 14, endLine: 18, endColumn: 35)
+            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotBePublicRule, 0)
+            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotBePublicRule, 1)
+            .WithExpectedDiagnostic(SemanticDesignAnalyzer.HandlersShouldNotBePublicRule, 2)
             .RunAsync();
     }
 
