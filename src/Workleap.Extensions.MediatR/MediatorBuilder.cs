@@ -108,7 +108,7 @@ public sealed class MediatorBuilder
         name: "ConnectImplementationsToTypesClosing",
         bindingAttr: BindingFlags.Static | BindingFlags.NonPublic,
         binder: null,
-        types: new[] { typeof(Type), typeof(IServiceCollection), typeof(IEnumerable<Assembly>), typeof(bool), typeof(MediatRServiceConfiguration) },
+        types: new[] { typeof(Type), typeof(IServiceCollection), typeof(IEnumerable<Assembly>), typeof(bool), typeof(MediatRServiceConfiguration), typeof(CancellationToken) },
         modifiers: null);
 
     private static void RegisterPreAndPostNonGenericClosedProcessors(MediatRServiceConfiguration configuration)
@@ -129,7 +129,7 @@ public sealed class MediatorBuilder
         var preProcessorServiceDescriptors = new ServiceCollection();
         ConnectImplementationsToTypesClosingMethodInfo.Invoke(obj: null, parameters: new object?[]
         {
-            typeof(IRequestPreProcessor<>), preProcessorServiceDescriptors, assembliesToRegister, true, configuration,
+            typeof(IRequestPreProcessor<>), preProcessorServiceDescriptors, assembliesToRegister, true, configuration, CancellationToken.None,
         });
         configuration.RequestPreProcessorsToRegister.AddRange(preProcessorServiceDescriptors);
 
@@ -138,7 +138,7 @@ public sealed class MediatorBuilder
         var postProcessorServiceDescriptors = new ServiceCollection();
         ConnectImplementationsToTypesClosingMethodInfo.Invoke(obj: null, parameters: new object?[]
         {
-            typeof(IRequestPostProcessor<,>), postProcessorServiceDescriptors, assembliesToRegister, true, configuration,
+            typeof(IRequestPostProcessor<,>), postProcessorServiceDescriptors, assembliesToRegister, true, configuration, CancellationToken.None,
         });
         configuration.RequestPostProcessorsToRegister.AddRange(postProcessorServiceDescriptors);
     }
