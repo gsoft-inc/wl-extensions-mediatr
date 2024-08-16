@@ -1,17 +1,15 @@
-﻿#if NETFRAMEWORK
-// ReSharper disable once CheckNamespace
-namespace System.Runtime.CompilerServices
-{
-    // ReSharper disable once RedundantNameQualifier
-    using System.ComponentModel;
+#if NETFRAMEWORK
+using System.ComponentModel;
 
-    /// <summary>
-    /// Reserved to be used by the compiler for tracking metadata.
-    /// This class should not be used by developers in source code.
-    /// </summary>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    internal static class IsExternalInit
-    {
-    }
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+namespace System.Runtime.CompilerServices;
+
+/// <summary>
+/// Reserved to be used by the compiler for tracking metadata.
+/// This class should not be used by developers in source code.
+/// </summary>
+[EditorBrowsable(EditorBrowsableState.Never)]
+internal static class IsExternalInit
+{
 }
 #endif

@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using MediatR;
 using MediatR.Pipeline;
@@ -94,7 +93,6 @@ public sealed class MediatorBuilder
         configuration.BehaviorsToRegister.Add(new ServiceDescriptor(typeof(IStreamPipelineBehavior<,>), typeof(StreamRequestValidationBehavior<,>), ServiceLifetime.Singleton));
     }
 
-    [SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1201:Elements should appear in the correct order", Justification = "Keeping this close to where it's used")]
     private static readonly PropertyInfo? AssembliesToRegisterPropertyInfo = typeof(MediatRServiceConfiguration).GetProperty(
         name: "AssembliesToRegister",
         bindingAttr: BindingFlags.Instance | BindingFlags.NonPublic,
@@ -103,7 +101,6 @@ public sealed class MediatorBuilder
         types: Array.Empty<Type>(),
         modifiers: null);
 
-    [SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1201:Elements should appear in the correct order", Justification = "Keeping this close to where it's used")]
     private static readonly MethodInfo? ConnectImplementationsToTypesClosingMethodInfo = typeof(ServiceRegistrar).GetMethod(
         name: "ConnectImplementationsToTypesClosing",
         bindingAttr: BindingFlags.Static | BindingFlags.NonPublic,

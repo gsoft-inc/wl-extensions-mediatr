@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using MediatR;
 
 namespace Workleap.Extensions.MediatR;
@@ -12,7 +12,7 @@ internal sealed class RequestTracingBehavior<TRequest, TResponse> : IPipelineBeh
 
         if (activity == null)
         {
-           return await next().ConfigureAwait(false);
+            return await next().ConfigureAwait(false);
         }
 
         return await HandleWithTracing(request, next, activity).ConfigureAwait(false);
