@@ -1,6 +1,37 @@
 {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": [
-      "github>gsoft-inc/renovate-config"
-    ]
-  }
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>gsoft-inc/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": [
+        "nuget"
+      ],
+      "includePaths": [
+        "Workleap.Extensions.MediatR.Analyzers.Tests"
+      ],
+      "matchPackagePatterns": [
+        "^xunit"
+      ],
+      "groupName": "XUnit (Roslyn Analyzer Tests)",
+      "description": "Newer XUnit versions have bugs that prevent the tests roslyn analyzer tests from running",
+      "enabled": false
+    },
+    {
+      "matchManagers": [
+        "nuget"
+      ],
+      "matchPackagePatterns": [
+        "^Microsoft\\.Extensions\\.",
+        "^Microsoft\\.CodeAnalysis\\.",
+        "^Microsoft\\.Bcl\\.AsyncInterfaces$",
+        "^Microsoft\\.SourceLink\\.GitHub",
+        "^System\\."
+      ],
+      "groupName": "Ignored NuGet dependencies",
+      "description": "These packages are usually set to a user-defined minimal supported version such as 6.0.0 for .NET 6, and they are overriden by consuming applications",
+      "enabled": false
+    }
+  ]
+}
