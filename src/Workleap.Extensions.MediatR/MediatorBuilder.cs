@@ -66,6 +66,10 @@ public sealed class MediatorBuilder
             // See: https://github.com/jbogard/MediatR/pull/989#issuecomment-1883574379
             RegisterPreAndPostNonGenericClosedProcessors(configuration);
 
+            // Restore the previous behavior of registering generic handlers from before MediatR 12.4.1
+            // https://github.com/jbogard/MediatR/compare/v12.4.0...v12.4.1
+            configuration.RegisterGenericHandlers = true;
+
             // Allow developers to override default configuration if needed
             userDefinedConfigure?.Invoke(configuration);
         }
