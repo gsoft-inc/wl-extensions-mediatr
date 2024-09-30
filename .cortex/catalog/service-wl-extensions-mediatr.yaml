@@ -1,6 +1,7 @@
 openapi: 3.0.1
 info:
   title: Workleap Extensions MediatR
+  description: .NET wrapper library around MediatR that adds many ease-of-use features.
   x-cortex-git:
     github:
       alias: gsoft-inc
@@ -9,14 +10,17 @@ info:
   x-cortex-type: library
   x-cortex-slack:
     channels:
-    - name: internal-dev-platform
-      notificationsEnabled: true
+      - name: internal-dev-platform
+        notificationsEnabled: true
   x-cortex-owners:
-  - name: team-internal-developer-platform-backend
-    type: GROUP
-    provider: CORTEX
+    - name: team-internal-developer-platform-backend
+      type: GROUP
+      provider: CORTEX
   x-cortex-link:
-  - type: cortex
-    url: https://github.com/gsoft-inc/wl-extensions-mediatr/blob/main/.cortex/catalog/service-wl-extensions-mediatr.yaml
-    name: Edit current Cortex entity in GitHub
+    - name: Documentation
+      type: documentation
+      url: https://gsoftdev.atlassian.net/wiki/spaces/TEC/pages/3491266697
+    - type: cortex
+      url: https://github.com/gsoft-inc/wl-extensions-mediatr/blob/main/.cortex/catalog/service-wl-extensions-mediatr.yaml
+      name: Edit current Cortex entity in GitHub
 
