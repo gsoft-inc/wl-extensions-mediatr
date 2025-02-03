@@ -32,7 +32,7 @@ global using MediatR;";
         this.TestState.Sources.Add(CSharp10GlobalUsings);
         this.TestState.Sources.Add(MediatRGlobalUsings);
 
-        this.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net60;
+        this.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
 
         // Reference "Microsoft.Extensions.DependencyInjection" assembly
         this.TestState.AdditionalReferences.Add(typeof(IServiceCollection).Assembly);
