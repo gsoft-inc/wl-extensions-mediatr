@@ -1,4 +1,4 @@
-﻿using GSoft.Extensions.Xunit;
+﻿using Workleap.Extensions.Xunit;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.DependencyInjection;
