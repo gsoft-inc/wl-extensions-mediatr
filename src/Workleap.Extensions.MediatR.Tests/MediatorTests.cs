@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using GSoft.Extensions.Xunit;
+using Workleap.Extensions.Xunit;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 

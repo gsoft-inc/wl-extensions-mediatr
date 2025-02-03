@@ -1,4 +1,4 @@
-﻿using GSoft.Extensions.Xunit;
+﻿using Workleap.Extensions.Xunit;
 using MediatR;
 using MediatR.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
