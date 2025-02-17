@@ -1,8 +1,8 @@
-﻿namespace Workleap.Extensions.MediatR.Analyzers.Internals;
+namespace Workleap.Extensions.MediatR.Analyzers.Internals;
 
 internal static class RuleIdentifiers
 {
-    public const string HelpUri = "https://github.com/gsoft-inc/wl-extensions-mediatr";
+    public const string HelpUri = "https://github.com/workleap/wl-extensions-mediatr";
 
     // DO NOT change the identifier of existing rules.
     // Projects can customize the severity level of analysis rules using a .editorconfig file.
