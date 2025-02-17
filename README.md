@@ -1,7 +1,7 @@
 # Workleap.Extensions.MediatR
 
 [![nuget](https://img.shields.io/nuget/v/Workleap.Extensions.MediatR.svg?logo=nuget)](https://www.nuget.org/packages/Workleap.Extensions.MediatR/)
-[![build](https://img.shields.io/github/actions/workflow/status/gsoft-inc/wl-extensions-mediatr/publish.yml?logo=github&branch=main)](https://github.com/gsoft-inc/wl-extensions-mediatr/actions/workflows/publish.yml)
+[![build](https://img.shields.io/github/actions/workflow/status/workleap/wl-extensions-mediatr/publish.yml?logo=github&branch=main)](https://github.com/workleap/wl-extensions-mediatr/actions/workflows/publish.yml)
 
 This library ensures that [MediatR](https://github.com/jbogard/MediatR) is registered in the dependency injection container **as a singleton** and also adds several features:
 
@@ -99,4 +99,4 @@ When you are ready to **officially release** a stable NuGet package by following
 
 ## License
 
-Copyright © 2023, Workleap. This code is licensed under the Apache License, Version 2.0. You may obtain a copy of this license at https://github.com/gsoft-inc/gsoft-license/blob/master/LICENSE.
+Copyright © 2023, Workleap. This code is licensed under the Apache License, Version 2.0. You may obtain a copy of this license at https://github.com/workleap/gsoft-license/blob/master/LICENSE.
